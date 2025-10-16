@@ -5,6 +5,7 @@
 ## What is Git?
 
 **Git** is version control software that helps you:
+
 - Track changes to your code over time
 - Save "snapshots" (commits) of your project at different stages
 - Revert to previous versions if something breaks
@@ -16,20 +17,24 @@ Think of it like "Track Changes" in Word, but much more powerful and designed fo
 ## Basic Concepts
 
 ### Repository (Repo)
+
 Your project folder with Git tracking enabled. The `.git` folder inside contains all the history.
 
 ### Commit
+
 A snapshot of your project at a specific point in time, with a message describing what changed.
 
 ### Staging Area
+
 A "waiting room" where you prepare files before committing them.
 
 ### Branch
+
 A parallel version of your code where you can experiment without affecting the main version.
 
 ## The Git Workflow
 
-```
+```plain text
 1. Make changes to files
    ↓
 2. Stage the changes (git add)
@@ -79,11 +84,13 @@ git commit
 ```
 
 **Good commit messages:**
+
 - ✅ "Fix Hebrew text encoding in extract_forecast.py"
 - ✅ "Add dry-run mode to workflow script"
 - ✅ "Update README with installation instructions"
 
 **Bad commit messages:**
+
 - ❌ "fixed stuff"
 - ❌ "update"
 - ❌ "asdf"
@@ -176,11 +183,13 @@ git log -- filename.py
 ## Best Practices for This Project
 
 ### 1. Commit Often
+
 - Commit after completing a logical chunk of work
 - Don't wait until the end of the day
 - Small, focused commits are better than large ones
 
 ### 2. Write Clear Commit Messages
+
 ```bash
 # Start with a verb, be specific
 git commit -m "Add error handling for missing XML files"
@@ -189,6 +198,7 @@ git commit -m "Fix temperature sorting bug"
 ```
 
 ### 3. Check Before You Commit
+
 ```bash
 # Always run these before committing:
 git status   # What files are changed?
@@ -196,7 +206,9 @@ git diff     # What exactly changed?
 ```
 
 ### 4. Don't Commit These Files
+
 The `.gitignore` file already handles this, but be aware:
+
 - ❌ Log files (`logs/*.log`)
 - ❌ Generated images (`output/*.jpg`)
 - ❌ Downloaded XML data files
@@ -206,6 +218,7 @@ The `.gitignore` file already handles this, but be aware:
 ## Phase-Based Commit Strategy
 
 ### Completing a Phase
+
 ```bash
 # When you complete a major phase:
 git add .
@@ -221,6 +234,7 @@ Closes Phase 2 milestone"
 ```
 
 ### During Development
+
 ```bash
 # Regular development commits:
 git commit -m "Add weather emoji icons dictionary"
@@ -244,6 +258,7 @@ logs/*.log
 ```
 
 **Why ignore files?**
+
 - Log files change constantly (not useful to track)
 - Generated files can be recreated
 - Large data files slow down the repository
@@ -272,6 +287,7 @@ git merge feature-instagram-integration
 ```
 
 **Use branches for:**
+
 - Experimenting with new features
 - Testing major changes
 - Working on Phase 2 while keeping Phase 1 stable
@@ -279,11 +295,13 @@ git merge feature-instagram-integration
 ## Remote Repositories (Future)
 
 Later, you might want to:
+
 - Back up your code to GitHub/GitLab
 - Share with the IT team
 - Collaborate with others
 
 Basic remote commands (for later):
+
 ```bash
 # Add a remote repository
 git remote add origin https://github.com/username/project.git
@@ -298,6 +316,7 @@ git pull origin main
 ## Troubleshooting
 
 ### "I committed the wrong files!"
+
 ```bash
 # Undo last commit, keep changes
 git reset --soft HEAD~1
@@ -308,6 +327,7 @@ git commit -m "Correct commit message"
 ```
 
 ### "I want to see what I changed yesterday"
+
 ```bash
 # Show commits from yesterday
 git log --since="yesterday"
@@ -317,6 +337,7 @@ git show COMMIT_HASH
 ```
 
 ### "I deleted a file by accident!"
+
 ```bash
 # If not committed yet:
 git checkout -- deleted_file.py
@@ -327,6 +348,7 @@ git checkout COMMIT_HASH -- deleted_file.py  # Restore from that commit
 ```
 
 ### "My working directory is messy, start fresh"
+
 ```bash
 # See what would be removed
 git clean -n
@@ -371,14 +393,17 @@ git merge name          # Merge branch into current
 ## Learning Resources
 
 ### Official Git Documentation
+
 - [Git Basics](https://git-scm.com/book/en/v2/Getting-Started-Git-Basics)
 - [Git Tutorial](https://git-scm.com/docs/gittutorial)
 
 ### Interactive Tutorials
+
 - [Learn Git Branching](https://learngitbranching.js.org/) - Visual, interactive
 - [GitHub Git Handbook](https://guides.github.com/introduction/git-handbook/)
 
 ### When You Get Stuck
+
 1. Run `git status` - it often tells you what to do
 2. Run `git log` - see what happened recently
 3. Google the error message - Git errors are well-documented
@@ -387,6 +412,7 @@ git merge name          # Merge branch into current
 ## Tips for This Project
 
 ### Daily Workflow
+
 ```bash
 # Start of day
 git status  # See where you left off
@@ -404,6 +430,7 @@ git log -3  # Review what you accomplished today
 ```
 
 ### Before Deploying to Server
+
 ```bash
 # Make sure everything is committed
 git status
@@ -416,6 +443,7 @@ git tag
 ```
 
 ### Regular Maintenance
+
 ```bash
 # Weekly: Review your progress
 git log --since="1 week ago" --oneline
@@ -429,6 +457,7 @@ git clean -n  # Preview what would be removed
 **Remember:** Git is a safety net, not a burden. Commit early, commit often!
 
 **Next Steps:**
+
 1. Practice with small commits
 2. Read commit messages later to remember what you did
 3. When comfortable, explore branching
