@@ -1,7 +1,7 @@
 # IMS Weather Automation - Project Structure
 
-**Last Updated:** October 15, 2025
-**Status:** Phase 1 Refinements In Progress
+**Last Updated:** October 16, 2025
+**Status:** Phase 2 Complete - Image Generation POC
 
 ---
 
@@ -11,30 +11,44 @@
 C:\Users\noamw\Desktop\ims\Automated Daily Forecast\
 │
 ├── 📄 Core XML Data
-│   └── isr_cities_utf8.xml                    # Current/latest XML (always UTF-8)
+│   ├── isr_cities_utf8.xml                    # Current/latest XML (always UTF-8)
+│   └── IMS_Logo.svg                           # Source logo file
 │
 ├── 📁 archive/                                 # Historical XML files (14 days)
 │   ├── README.md                               # Archive folder documentation
-│   ├── isr_cities_2025-10-15.xml             # Example: Today's archived XML
-│   ├── isr_cities_2025-10-14.xml             # Example: Yesterday's XML
+│   ├── isr_cities_2025-10-16.xml             # Example: Today's archived XML
+│   ├── isr_cities_2025-10-15.xml             # Example: Yesterday's XML
 │   └── ...                                     # Auto-managed (keep 14 days)
 │
 ├── 📁 logs/                                    # Operation logs
 │   ├── README.md                               # Logs folder documentation
-│   └── forecast_automation.log                # Main log file (will be created)
+│   └── forecast_automation.log                # Main log file
 │
-├── 📁 output/                                  # Generated images (Phase 2+)
+├── 📁 output/                                  # Generated images
 │   ├── README.md                               # Output folder documentation
-│   └── weather_story_YYYY-MM-DD.jpg           # Daily Instagram stories
+│   └── test_city_forecast.jpg                 # Example: Test image (Tel Aviv POC)
 │
-├── 🐍 Production Scripts (Phase 1 - To Be Created)
-│   ├── download_forecast.py                   # Download & convert XML from IMS
-│   ├── extract_forecast.py                    # Extract weather data with error handling
-│   ├── forecast_workflow.py                   # Main orchestration script (runs daily)
-│   └── utils.py                               # Shared utility functions
+├── 📁 assets/                                  # Image generation assets (Phase 2)
+│   ├── logos/                                  # IMS logo files
+│   │   └── ims_logo_placeholder.png           # Placeholder logo (awaiting conversion)
+│   └── weather_icons/                          # Weather emoji PNGs
+│       ├── sunny.png                           # Code 1250
+│       ├── partly_cloudy.png                   # Code 1220
+│       ├── mostly_clear.png                    # Code 1310
+│       └── very_hot.png                        # Code 1580
+│
+├── 📁 fonts/                                   # Typography (Phase 2)
+│   └── Fredoka-Variable.ttf                   # Variable font (Hebrew support)
+│
+├── 🐍 Production Scripts (Phase 1 - Complete)
+│   ├── download_forecast.py                   # ✅ Download & convert XML from IMS
+│   ├── extract_forecast.py                    # ✅ Extract weather data with error handling
+│   ├── forecast_workflow.py                   # ✅ Main orchestration script
+│   └── utils.py                               # ✅ Shared utility functions
 │
 ├── 📁 exploration/                             # Development & test scripts
 │   ├── README.md                               # Exploration scripts documentation
+│   ├── generate_image.py                      # ✅ Phase 2 POC: Single city image generation
 │   ├── test_extraction_minimal.py             # ✅ Minimal extraction test (1 city)
 │   ├── extract_all_cities.py                  # ✅ Full extraction test (15 cities)
 │   ├── inspect_xml.py                         # ✅ XML structure inspector
@@ -43,9 +57,19 @@ C:\Users\noamw\Desktop\ims\Automated Daily Forecast\
 │   └── parse_weather.py                       # ⚠️ Unicode error - for reference
 │
 └── 📚 Documentation
-    ├── ims_project_docs.md                    # Comprehensive project documentation
-    ├── PROJECT_STRUCTURE.md                   # This file - project structure overview
-    └── Claude session.md                      # Previous conversation log
+    ├── README.md                              # Main project documentation
+    ├── CHANGELOG.md                           # Version history
+    ├── requirements.txt                       # Python dependencies
+    └── docs/                                  # Organized documentation
+        ├── README.md                          # Documentation index
+        ├── PROJECT_DOCUMENTATION.md           # Comprehensive technical docs
+        ├── PROJECT_STRUCTURE.md               # This file
+        └── dev-guides/                        # Development helper guides
+            ├── README.md                      # Dev guides index
+            ├── GIT_GUIDE.md                   # Git workflow guide
+            ├── GITHUB_SETUP.md                # GitHub setup guide
+            ├── QUICK_START_GITHUB.md          # Quick GitHub reference
+            └── YOUR_NEXT_STEPS.md             # Publishing checklist
 ```
 
 ---
@@ -155,23 +179,20 @@ C:\Users\noamw\Desktop\ims\Automated Daily Forecast\
 - `glob` - File pattern matching
 - `sys` - System operations
 
-### **External Libraries (Need Installation)**
+### **External Libraries (Installed)**
 
-- `requests` - HTTP downloading
+- `requests>=2.31.0` - HTTP downloading
+- `Pillow>=10.0.0` - Image generation (Phase 2)
+- `python-bidi>=0.4.2` - Hebrew RTL text support (Phase 2)
 
-  ```bash
-  pip install requests
-  ```
+Install all:
+```bash
+pip install -r requirements.txt
+```
 
-### **Future Dependencies (Phase 2+)**
+### **Future Dependencies (Phase 4+)**
 
-- `Pillow` - Image generation
-
-  ```bash
-  pip install Pillow
-  ```
-
-- `smtplib` - Email sending (built-in)
+- `smtplib` - Email sending (built-in, no installation needed)
 
 ---
 
@@ -301,32 +322,50 @@ type logs\forecast_automation.log
 
 ## 📝 Development Status
 
-### **Completed ✅**
+### **Phase 1: Complete ✅**
 
 - [x] Python environment setup (3.13.2)
 - [x] XML structure understanding
 - [x] UTF-8 encoding working
 - [x] Hebrew text handling
-- [x] Basic extraction working (minimal test)
 - [x] Full extraction working (all 15 cities)
 - [x] North-to-South sorting
-- [x] Folder structure created
+- [x] Download script with retry logic
+- [x] Archive management (14-day retention)
+- [x] Enhanced extraction with error handling
+- [x] Main workflow orchestration
+- [x] Comprehensive logging system
+- [x] Dry-run mode
 
-### **In Progress 🔄**
+### **Phase 2: Complete ✅**
 
-- [ ] Download script (`download_forecast.py`)
-- [ ] Archive management
-- [ ] Enhanced extraction with error handling
-- [ ] Main workflow orchestration
-- [ ] Logging system
-- [ ] Dry-run mode
+- [x] Fredoka variable font integration
+- [x] Hebrew RTL text rendering with python-bidi
+- [x] iOS-style weather emoji icons (PNG overlays)
+- [x] Professional header with logo and date
+- [x] White header + gradient background
+- [x] 1080x1920px image generation
+- [x] Single city proof-of-concept (Tel Aviv)
+- [x] Easy-to-configure design constants
 
-### **Planned 📅**
+### **Phase 3: Planned 📅**
 
-- Phase 2: Image generation
-- Phase 3: Complete design implementation
-- Phase 4: Email delivery & scheduling
-- Phase 5: Server deployment
+- [ ] Single image with all 15 cities
+- [ ] Vertical layout design (north to south)
+- [ ] Weather icon, temperature, city name for each
+- [ ] Final production-ready design
+
+### **Phase 4: Planned 📅**
+
+- [ ] Email delivery to social media team
+- [ ] Automated daily scheduling (6:00 AM)
+- [ ] Error notification system
+
+### **Phase 5: Future 📅**
+
+- [ ] Server deployment
+- [ ] Linux compatibility testing
+- [ ] Handoff to IT team
 
 ---
 
@@ -362,5 +401,5 @@ type logs\forecast_automation.log
 
 ---
 
-**Last Updated:** October 15, 2025
-**Next Step:** Create production scripts (download, extract, workflow)
+**Last Updated:** October 16, 2025
+**Next Step:** Phase 3 - Complete design with all 15 cities in single image

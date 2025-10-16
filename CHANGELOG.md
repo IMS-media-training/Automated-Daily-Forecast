@@ -5,6 +5,102 @@ All notable changes to the IMS Weather Forecast Automation project will be docum
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-10-16
+
+### Phase 2 Complete: Enhanced Image Generation (Single City POC) ✅
+
+Successfully implemented proof-of-concept image generation with professional design elements, variable font system, and proper emoji rendering.
+
+### Added
+
+#### Image Generation System
+- **Fredoka Variable Font Integration**
+  - Weight axis: 300-700 (Light to Bold)
+  - Width axis: 75-125 (Condensed to Wide)
+  - Full Hebrew language support
+  - Easy-to-configure font constants
+
+- **iOS-Style Weather Icons**
+  - High-quality Twemoji PNG overlays (512x512px)
+  - 4 weather codes: sunny, partly cloudy, mostly clear, very hot
+  - Transparent PNG overlay system
+
+- **Professional Header Design**
+  - IMS logo placeholder (awaiting SVG→PNG conversion)
+  - Forecast date in DD/MM/YYYY format
+  - Clean white background (180px header)
+
+- **Hebrew RTL Text Rendering**
+  - python-bidi library integration
+  - Proper right-to-left text display
+  - Hebrew city names render correctly
+
+- **Visual Design**
+  - 1080x1920px Instagram story format
+  - White header section with logo and date
+  - Sky-to-white gradient background
+  - Centered layout with weather icon, city name, temperature
+
+#### Assets & Resources
+- Created assets/ folder structure:
+  - `assets/logos/` - IMS logo files
+  - `assets/weather_icons/` - Weather emoji PNGs
+- Added `fonts/Fredoka-Variable.ttf`
+- Downloaded 4 Twemoji weather icons
+
+#### Project Organization
+- Reorganized documentation into `docs/` structure
+  - Created `docs/` for production documentation
+  - Created `docs/dev-guides/` for development helpers
+  - Moved PROJECT_STRUCTURE.md to docs/
+  - Renamed ims_project_docs.md → PROJECT_DOCUMENTATION.md
+  - Moved Git/GitHub guides to dev-guides/
+- Created navigation README files for docs folders
+
+### Changed
+- **exploration/generate_image.py**: Complete rewrite with modular design
+  - Added configuration constants section
+  - Implemented variable font loading with axes control
+  - PNG icon overlay system with transparency
+  - Header generation with logo and date
+  - Modular helper functions for reusability
+- Font system: Switched from Heebo to Fredoka variable font
+
+### Removed
+- Heebo font files (3 files) - replaced with Fredoka variable font
+
+### Technical Details
+
+#### New Dependencies
+- `python-bidi>=0.4.2` - Hebrew RTL support
+- `cairosvg` - SVG conversion (optional, for logo)
+- `svglib`, `reportlab` - SVG rendering (optional)
+
+#### Configuration System
+All design elements configurable via constants in generate_image.py:
+- Font weights and widths (variable axes)
+- Font sizes for city, temperature, date
+- Header dimensions and margins
+- Icon size and positioning
+- Color palette (white, black, gray, sky blue)
+
+### Output
+Successfully generates Instagram story POC image featuring:
+- White header with IMS logo placeholder and date (16/10/2025)
+- Colorful weather icon (iOS-style emoji)
+- Hebrew city name in Fredoka font (RTL: תל אביב - יפו)
+- Temperature range display (18-27°C)
+- Beautiful sky-to-white gradient background
+
+### What's Next
+**Phase 3: Complete Design - All 15 Cities in Single Image**
+- Design vertical layout for 15 city rows
+- Implement city positioning system (north to south)
+- Display weather icon, temperature, and city name for each
+- Final production-ready image generation
+
+---
+
 ## [1.0.0] - 2025-10-15
 
 ### Phase 1 Complete: XML Download & Data Extraction ✅
@@ -94,18 +190,11 @@ This marks the completion of Phase 1, establishing a solid foundation for automa
 
 ### What's Next
 
-#### Phase 2: Single City Image Generation (In Progress)
-- Set up Pillow image library
-- Load Hebrew-compatible fonts (Rubik, Heebo, Alef)
-- Create basic image canvas (1080x1920px)
-- Render proof-of-concept with one city
-- Handle RTL (right-to-left) text rendering
-
-#### Phase 3: Complete Design Implementation (Planned)
-- Generate full 15-city forecast image
-- Implement gradient background (blue → orange)
-- Add weather emoji icons
-- Position all cities with proper spacing
+#### Phase 3: Complete Design - All 15 Cities (Planned)
+- Single image with all 15 cities in vertical layout
+- Implement row-based positioning (north to south)
+- Weather icon, temperature, and city name for each
+- Final design refinement and spacing
 - Export production-ready JPG images
 
 #### Phase 4: Automation & Delivery (Planned)
@@ -125,7 +214,12 @@ This marks the completion of Phase 1, establishing a solid foundation for automa
 ## Version History
 
 ### [Unreleased]
-- Phase 2 image generation features (in development)
+- Phase 3: Complete design with all 15 cities
+
+### [2.0.0] - 2025-10-16
+- Phase 2 complete: Enhanced image generation (single city POC)
+- Fredoka variable font, iOS-style icons, Hebrew RTL text
+- Documentation reorganization
 
 ### [1.0.0] - 2025-10-15
 - Phase 1 complete: XML download and data extraction
@@ -152,4 +246,4 @@ This marks the completion of Phase 1, establishing a solid foundation for automa
 ---
 
 **Maintained by:** Noam W, IMS Design Team
-**Last Updated:** October 15, 2025
+**Last Updated:** October 16, 2025

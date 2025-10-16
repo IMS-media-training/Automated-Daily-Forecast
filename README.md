@@ -6,7 +6,7 @@
 
 This project automates the creation of daily weather forecast images for the Israel Meteorological Service (IMS) social media accounts. It downloads forecast data from IMS, processes it, and generates beautifully designed Instagram story images featuring 15 major Israeli cities.
 
-**Current Status:** Phase 1 Complete - XML Download & Data Extraction ✅
+**Current Status:** Phase 2 Complete ✅ - Enhanced Image Generation (Single City POC)
 
 ## Features
 
@@ -19,16 +19,21 @@ This project automates the creation of daily weather forecast images for the Isr
 - ✅ Comprehensive error handling and logging
 - ✅ Dry-run mode for safe testing
 
-### Phase 2: Image Generation 🔄 IN PROGRESS
-- Generate 1080x1920px Instagram story images
-- Hebrew text support with RTL (right-to-left) layout
-- Weather emoji icons based on forecast codes
-- Custom gradient backgrounds
+### Phase 2: Image Generation (Single City POC) ✅ COMPLETE
+- ✅ Fredoka variable font with Hebrew support (configurable weight/width axes)
+- ✅ iOS-style weather emoji icons (PNG overlays)
+- ✅ Professional header with IMS logo and forecast date (DD/MM/YYYY)
+- ✅ Hebrew RTL text rendering with python-bidi
+- ✅ White header + sky-to-white gradient background
+- ✅ Easy-to-configure design constants
+- ✅ Generates 1080x1920px Instagram story images
+- ✅ Proof-of-concept with Tel Aviv data
 
-### Phase 3: Complete Design Implementation 📅 PLANNED
-- Full visual design matching IMS brand guidelines
-- City-specific weather icons
-- Temperature ranges and additional weather details
+### Phase 3: Complete Design - All 15 Cities 📅 PLANNED
+- Single image displaying all 15 cities
+- Vertical layout with city rows (north to south)
+- Weather icon, temperature, and city name for each
+- Final production design implementation
 
 ### Phase 4: Automation & Delivery 📅 PLANNED
 - Automated daily execution (6:00 AM)
@@ -105,12 +110,18 @@ Automated Daily Forecast/
 │   ├── forecast_workflow.py      # Main orchestration script
 │   ├── download_forecast.py      # XML download & encoding
 │   ├── extract_forecast.py       # Data extraction
+│   ├── generate_image.py         # Image generation (Phase 3)
 │   └── utils.py                  # Shared utilities
 │
 ├── 📁 Data & Output
 │   ├── archive/                  # Historical XML (14 days)
 │   ├── logs/                     # Automation logs
-│   └── output/                   # Generated images (Phase 2+)
+│   └── output/                   # Generated images
+│
+├── 📁 Assets
+│   ├── assets/logos/             # IMS logo files
+│   ├── assets/weather_icons/    # Weather emoji PNGs
+│   └── fonts/                    # Fredoka variable font
 │
 ├── 📁 Development
 │   └── exploration/              # Test & development scripts
@@ -118,9 +129,10 @@ Automated Daily Forecast/
 └── 📚 Documentation
     ├── README.md                 # This file
     ├── CHANGELOG.md              # Version history
-    ├── GIT_GUIDE.md              # Git workflow guide
-    ├── ims_project_docs.md       # Technical documentation
-    └── PROJECT_STRUCTURE.md      # Detailed structure reference
+    ├── docs/                     # Production documentation
+    │   ├── PROJECT_DOCUMENTATION.md
+    │   └── PROJECT_STRUCTURE.md
+    └── docs/dev-guides/          # Development helper guides
 ```
 
 ## Weather Data
@@ -151,6 +163,7 @@ The automation processes forecasts for **15 Israeli cities**, sorted north to so
 
 ## Configuration
 
+### Data Processing
 Key settings are defined in [utils.py](utils.py):
 
 | Setting | Value | Description |
@@ -158,6 +171,14 @@ Key settings are defined in [utils.py](utils.py):
 | `ARCHIVE_RETENTION_DAYS` | 14 days | How long to keep historical XML files |
 | `EXPECTED_CITY_COUNT` | 15 cities | Number of cities we expect in the data |
 | `XML_FILE` | `isr_cities_utf8.xml` | Main working XML file |
+
+### Image Generation (Phase 2)
+Design settings in [exploration/generate_image.py](exploration/generate_image.py):
+- **Fredoka Font**: Variable axes (weight 300-700, width 75-125)
+- **Image Size**: 1080x1920px (Instagram story format)
+- **Header**: 180px white section with logo and date
+- **Weather Icons**: 180px iOS-style emoji PNGs
+- All visual parameters configurable via constants
 
 ## Logging
 
@@ -229,8 +250,13 @@ This project is developed by the IMS Design & Social Media Team.
 
 - **Python:** 3.13+ (tested on 3.13.2)
 - **Platform:** Windows (primary), Linux-compatible design
-- **Dependencies:** Listed in [requirements.txt](requirements.txt)
 - **Network:** Internet access to download XML from IMS servers
+
+### Dependencies
+See [requirements.txt](requirements.txt) for full list:
+- `requests>=2.31.0` - XML download
+- `Pillow>=10.0.0` - Image generation
+- `python-bidi>=0.4.2` - Hebrew RTL text support
 
 ## Data Source
 
@@ -254,5 +280,5 @@ For deployment questions, consult IMS IT Department.
 
 ---
 
-**Last Updated:** October 15, 2025
-**Phase Status:** Phase 1 Complete ✅ | Phase 2 In Progress 🔄
+**Last Updated:** October 16, 2025
+**Phase Status:** Phase 2 Complete ✅ | Phase 3 Planned 📅

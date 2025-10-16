@@ -1,12 +1,16 @@
 """
-IMS Weather Forecast Automation - Phase 2: Image Generation POC
+IMS Weather Forecast Automation - Phase 2: Enhanced Image Generation
 
-Single city image generation proof-of-concept with Hebrew RTL text support.
-Generates a simple Instagram story image (1080x1920px) for one city.
+Single city image generation with:
+- Fredoka variable font (configurable weight/width axes)
+- iOS-style weather icon PNGs
+- Header with IMS logo and forecast date
+- Hebrew RTL text support
 """
 
 import sys
 from pathlib import Path
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from bidi.algorithm import get_display
 
@@ -16,84 +20,84 @@ from extract_forecast import extract_forecast
 
 
 # ============================================================================
-# CONFIGURATION
+# CONFIGURATION - Easy to modify design parameters
 # ============================================================================
 
 # Image dimensions (Instagram story format)
 IMAGE_WIDTH = 1080
 IMAGE_HEIGHT = 1920
 
-# Output directory
-OUTPUT_DIR = Path(__file__).parent.parent / "output"
+# Font Configuration (Fredoka Variable Font)
+# Weight axis: 300 (Light) to 700 (Bold)
+# Width axis: 75 (Condensed) to 125 (Wide)
+FONT_WEIGHT_CITY = 600      # SemiBold for city name
+FONT_WIDTH_CITY = 100       # Normal width
+FONT_SIZE_CITY = 120        # City name font size
 
-# Font paths
-FONT_DIR = Path(__file__).parent.parent / "fonts"
-FONT_VARIABLE = FONT_DIR / "Heebo-Variable.ttf"
+FONT_WEIGHT_TEMP = 500      # Medium for temperature
+FONT_WIDTH_TEMP = 100       # Normal width
+FONT_SIZE_TEMP = 100        # Temperature font size
+
+FONT_WEIGHT_DATE = 400      # Regular for date
+FONT_WIDTH_DATE = 100       # Normal width
+FONT_SIZE_DATE = 50         # Date font size
+
+# Header Configuration
+HEADER_HEIGHT = 180         # White header section height
+LOGO_HEIGHT = 120           # IMS logo display height
+LOGO_MARGIN_LEFT = 40       # Logo left margin
+LOGO_MARGIN_TOP = 30        # Logo top margin
+
+# Weather Icon Configuration
+ICON_SIZE = 180             # Weather icon display size (pixels)
 
 # Colors (RGB)
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_GRAY = (100, 100, 100)
-COLOR_SKY_LIGHT = (135, 206, 250)  # Light sky blue
-COLOR_SKY_MEDIUM = (100, 180, 255)  # Medium sky blue
+COLOR_SKY_LIGHT = (135, 206, 250)  # Light sky blue for gradient top
 
+# Paths
+OUTPUT_DIR = Path(__file__).parent.parent / "output"
+FONT_DIR = Path(__file__).parent.parent / "fonts"
+ASSETS_DIR = Path(__file__).parent.parent / "assets"
 
-# ============================================================================
-# WEATHER CODE MAPPING
-# ============================================================================
+# Font file
+FONT_VARIABLE = FONT_DIR / "Fredoka-Variable.ttf"
 
-WEATHER_EMOJI = {
-    '1250': '☀️',      # Clear/Sunny
-    '1220': '⛅',      # Partly Cloudy
-    '1310': '🌤️',     # Mostly Clear
-    '1580': '🌡️☀️',   # Very Hot/Sunny
-    # Add more codes as needed
+# Asset paths
+LOGO_PATH = ASSETS_DIR / "logos" / "ims_logo.png"
+WEATHER_ICONS_DIR = ASSETS_DIR / "weather_icons"
+
+# Weather Code to Icon Mapping
+WEATHER_ICONS = {
+    '1250': 'sunny.png',          # Clear/Sunny
+    '1220': 'partly_cloudy.png',  # Partly Cloudy
+    '1310': 'mostly_clear.png',   # Mostly Clear
+    '1580': 'very_hot.png',       # Very Hot/Sunny
 }
 
 
-def get_weather_emoji(weather_code: str) -> str:
-    """
-    Get emoji for weather code, with fallback.
-
-    Args:
-        weather_code: Weather code from XML
-
-    Returns:
-        Weather emoji string
-    """
-    return WEATHER_EMOJI.get(weather_code, '🌤️')  # Default to mostly clear
-
-
 # ============================================================================
-# IMAGE GENERATION FUNCTIONS
+# HELPER FUNCTIONS
 # ============================================================================
 
-def create_gradient_background(width: int, height: int) -> Image.Image:
+def load_font_with_variation(size: int, weight: int, width: int) -> ImageFont.FreeTypeFont:
     """
-    Create a simple vertical gradient background.
+    Load Fredoka variable font with specific weight and width axes.
 
     Args:
-        width: Image width in pixels
-        height: Image height in pixels
+        size: Font size in pixels
+        weight: Weight axis value (300-700)
+        width: Width axis value (75-125)
 
     Returns:
-        PIL Image with gradient background
+        Configured font object
     """
-    # Create blank image
-    image = Image.new('RGB', (width, height))
-    draw = ImageDraw.Draw(image)
-
-    # Draw vertical gradient from top (light blue) to bottom (white)
-    for y in range(height):
-        # Calculate color interpolation
-        ratio = y / height
-        r = int(COLOR_SKY_LIGHT[0] + (COLOR_WHITE[0] - COLOR_SKY_LIGHT[0]) * ratio)
-        g = int(COLOR_SKY_LIGHT[1] + (COLOR_WHITE[1] - COLOR_SKY_LIGHT[1]) * ratio)
-        b = int(COLOR_SKY_LIGHT[2] + (COLOR_WHITE[2] - COLOR_SKY_LIGHT[2]) * ratio)
-
-        draw.line([(0, y), (width, y)], fill=(r, g, b))
-
-    return image
+    font = ImageFont.truetype(str(FONT_VARIABLE), size)
+    # Set variable font axes: [weight, width] for Fredoka
+    font.set_variation_by_axes([weight, width])
+    return font
 
 
 def render_hebrew_text(text: str) -> str:
@@ -109,12 +113,146 @@ def render_hebrew_text(text: str) -> str:
     return get_display(text)
 
 
-def generate_city_image(city_data: dict, output_path: Path) -> bool:
+def load_weather_icon(weather_code: str) -> Image.Image:
+    """
+    Load weather icon PNG for the given weather code.
+
+    Args:
+        weather_code: Weather code from XML
+
+    Returns:
+        PIL Image of weather icon, resized to ICON_SIZE
+    """
+    # Get icon filename from mapping, with fallback
+    icon_filename = WEATHER_ICONS.get(weather_code, 'mostly_clear.png')
+    icon_path = WEATHER_ICONS_DIR / icon_filename
+
+    try:
+        icon = Image.open(icon_path).convert('RGBA')
+        # Resize to configured icon size with high-quality resampling
+        icon = icon.resize((ICON_SIZE, ICON_SIZE), Image.Resampling.LANCZOS)
+        return icon
+    except Exception as e:
+        print(f"  Warning: Could not load icon {icon_filename}: {e}")
+        # Return a blank placeholder if icon fails to load
+        return Image.new('RGBA', (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+
+
+def load_logo() -> Image.Image:
+    """
+    Load IMS logo PNG.
+
+    Returns:
+        PIL Image of logo, resized to fit header
+    """
+    try:
+        logo = Image.open(LOGO_PATH).convert('RGBA')
+
+        # Calculate proportional width based on LOGO_HEIGHT
+        aspect_ratio = logo.width / logo.height
+        new_width = int(LOGO_HEIGHT * aspect_ratio)
+
+        # Resize logo maintaining aspect ratio
+        logo = logo.resize((new_width, LOGO_HEIGHT), Image.Resampling.LANCZOS)
+        return logo
+    except Exception as e:
+        print(f"  Warning: Could not load logo: {e}")
+        # Return a small placeholder
+        return Image.new('RGBA', (LOGO_HEIGHT, LOGO_HEIGHT), (200, 200, 200, 255))
+
+
+def format_forecast_date(date_str: str) -> str:
+    """
+    Format forecast date as DD/MM/YYYY.
+
+    Args:
+        date_str: Date string in YYYY-MM-DD format
+
+    Returns:
+        Formatted date string DD/MM/YYYY
+    """
+    try:
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        return date_obj.strftime('%d/%m/%Y')
+    except:
+        # Fallback to original string if parsing fails
+        return date_str
+
+
+# ============================================================================
+# IMAGE GENERATION FUNCTIONS
+# ============================================================================
+
+def create_gradient_background(width: int, height: int, header_height: int) -> Image.Image:
+    """
+    Create image with white header and gradient background.
+
+    Args:
+        width: Image width in pixels
+        height: Image height in pixels
+        header_height: Height of white header section
+
+    Returns:
+        PIL Image with header and gradient background
+    """
+    # Create blank image
+    image = Image.new('RGB', (width, height))
+    draw = ImageDraw.Draw(image)
+
+    # Draw white header
+    draw.rectangle([(0, 0), (width, header_height)], fill=COLOR_WHITE)
+
+    # Draw vertical gradient below header (sky blue to white)
+    for y in range(header_height, height):
+        # Calculate color interpolation (0.0 at header_height, 1.0 at bottom)
+        ratio = (y - header_height) / (height - header_height)
+        r = int(COLOR_SKY_LIGHT[0] + (COLOR_WHITE[0] - COLOR_SKY_LIGHT[0]) * ratio)
+        g = int(COLOR_SKY_LIGHT[1] + (COLOR_WHITE[1] - COLOR_SKY_LIGHT[1]) * ratio)
+        b = int(COLOR_SKY_LIGHT[2] + (COLOR_WHITE[2] - COLOR_SKY_LIGHT[2]) * ratio)
+
+        draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+    return image
+
+
+def add_header_content(image: Image.Image, date_str: str) -> None:
+    """
+    Add logo and date to header section of image.
+
+    Args:
+        image: PIL Image object to modify
+        date_str: Forecast date string (YYYY-MM-DD)
+    """
+    # Load and paste logo
+    logo = load_logo()
+    logo_x = LOGO_MARGIN_LEFT
+    logo_y = LOGO_MARGIN_TOP
+    image.paste(logo, (logo_x, logo_y), logo)  # Use logo as mask for transparency
+
+    # Add date text (right side of header)
+    draw = ImageDraw.Draw(image)
+    date_font = load_font_with_variation(FONT_SIZE_DATE, FONT_WEIGHT_DATE, FONT_WIDTH_DATE)
+
+    formatted_date = format_forecast_date(date_str)
+
+    # Get text dimensions for right-alignment
+    bbox = draw.textbbox((0, 0), formatted_date, font=date_font)
+    text_width = bbox[2] - bbox[0]
+
+    # Position date on right side with margin
+    date_x = IMAGE_WIDTH - text_width - LOGO_MARGIN_LEFT
+    date_y = (HEADER_HEIGHT - (bbox[3] - bbox[1])) // 2  # Vertically center in header
+
+    draw.text((date_x, date_y), formatted_date, fill=COLOR_BLACK, font=date_font)
+
+
+def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) -> bool:
     """
     Generate a weather forecast image for one city.
 
     Args:
         city_data: Dictionary with city forecast data
+        forecast_date: Date of forecast (YYYY-MM-DD)
         output_path: Path to save the image
 
     Returns:
@@ -123,16 +261,25 @@ def generate_city_image(city_data: dict, output_path: Path) -> bool:
     try:
         print(f"\nGenerating image for: {city_data['name_eng']}")
 
-        # Create canvas with gradient background
-        print("Creating canvas with gradient background...")
-        image = create_gradient_background(IMAGE_WIDTH, IMAGE_HEIGHT)
+        # Create canvas with white header and gradient background
+        print("  Creating canvas with header and gradient background...")
+        image = create_gradient_background(IMAGE_WIDTH, IMAGE_HEIGHT, HEADER_HEIGHT)
+
+        # Add header content (logo and date)
+        print("  Adding header with logo and date...")
+        add_header_content(image, forecast_date)
+
+        # Prepare for drawing on main canvas
         draw = ImageDraw.Draw(image)
 
-        # Load fonts (using variable font)
-        print("Loading fonts...")
-        font_city_name = ImageFont.truetype(str(FONT_VARIABLE), 120)
-        font_temp = ImageFont.truetype(str(FONT_VARIABLE), 100)
-        font_emoji = ImageFont.truetype(str(FONT_VARIABLE), 150)
+        # Load fonts
+        print("  Loading Fredoka variable fonts...")
+        font_city_name = load_font_with_variation(
+            FONT_SIZE_CITY, FONT_WEIGHT_CITY, FONT_WIDTH_CITY
+        )
+        font_temp = load_font_with_variation(
+            FONT_SIZE_TEMP, FONT_WEIGHT_TEMP, FONT_WIDTH_TEMP
+        )
 
         # Prepare text content
         city_name_heb = city_data['name_heb']
@@ -143,29 +290,29 @@ def generate_city_image(city_data: dict, output_path: Path) -> bool:
         temp_text = f"{temp_min}-{temp_max}°C"
 
         weather_code = city_data['weather_code']
-        weather_emoji = get_weather_emoji(weather_code)
 
         print(f"  Temperature: {temp_text}")
         print(f"  Weather Code: {weather_code}")
-        # Note: Not printing Hebrew text or emojis due to Windows console encoding
 
-        # Calculate vertical positions (centered vertically)
-        center_y = IMAGE_HEIGHT // 2
+        # Calculate vertical positions (centered in content area below header)
+        content_start = HEADER_HEIGHT
+        content_height = IMAGE_HEIGHT - HEADER_HEIGHT
+        center_y = content_start + (content_height // 2)
 
-        # Position 1: Weather emoji at top-center
-        emoji_y = center_y - 300
+        # Position 1: Weather icon (PNG) at top-center of content area
+        icon_y = center_y - 300
 
-        # Get emoji text dimensions for centering
-        emoji_bbox = draw.textbbox((0, 0), weather_emoji, font=font_emoji)
-        emoji_width = emoji_bbox[2] - emoji_bbox[0]
-        emoji_x = (IMAGE_WIDTH - emoji_width) // 2
+        print("  Loading weather icon...")
+        weather_icon = load_weather_icon(weather_code)
 
-        # Draw weather emoji
-        # Note: Emojis might not render with all fonts, so we draw as text
-        draw.text((emoji_x, emoji_y), weather_emoji, fill=COLOR_BLACK, font=font_emoji, embedded_color=True)
+        # Center icon horizontally
+        icon_x = (IMAGE_WIDTH - ICON_SIZE) // 2
 
-        # Position 2: City name below emoji
-        city_y = emoji_y + 200
+        # Paste icon with transparency
+        image.paste(weather_icon, (icon_x, icon_y), weather_icon)
+
+        # Position 2: City name below icon
+        city_y = icon_y + ICON_SIZE + 40
 
         # Get city name dimensions for centering
         city_bbox = draw.textbbox((0, 0), city_name_display, font=font_city_name)
@@ -187,14 +334,14 @@ def generate_city_image(city_data: dict, output_path: Path) -> bool:
         draw.text((temp_x, temp_y), temp_text, fill=COLOR_GRAY, font=font_temp)
 
         # Save image
-        print(f"Saving image to: {output_path}")
+        print(f"  Saving image to: {output_path}")
         image.save(output_path, 'JPEG', quality=95)
-        print("OK Image saved successfully!")
+        print("  Image saved successfully!")
 
         return True
 
     except Exception as e:
-        print(f"X Error generating image: {e}")
+        print(f"  ERROR generating image: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -207,7 +354,7 @@ def generate_city_image(city_data: dict, output_path: Path) -> bool:
 def main():
     """Main entry point for the script."""
     print("="*60)
-    print("IMS WEATHER FORECAST - IMAGE GENERATION POC")
+    print("IMS WEATHER FORECAST - ENHANCED IMAGE GENERATION")
     print("="*60)
 
     # Extract forecast data
@@ -215,8 +362,11 @@ def main():
     cities_data = extract_forecast()
 
     if not cities_data:
-        print("X Failed to extract forecast data")
+        print("ERROR: Failed to extract forecast data")
         sys.exit(1)
+
+    # Get forecast date from extracted data (use today's date as fallback)
+    forecast_date = datetime.now().strftime('%Y-%m-%d')
 
     # Find Tel Aviv (our test city)
     tel_aviv = None
@@ -226,7 +376,7 @@ def main():
             break
 
     if not tel_aviv:
-        print("X Tel Aviv not found in forecast data")
+        print("ERROR: Tel Aviv not found in forecast data")
         sys.exit(1)
 
     # Ensure output directory exists
@@ -234,17 +384,24 @@ def main():
 
     # Generate image
     output_path = OUTPUT_DIR / "test_city_forecast.jpg"
-    success = generate_city_image(tel_aviv, output_path)
+    success = generate_city_image(tel_aviv, forecast_date, output_path)
 
     # Summary
     print("\n" + "="*60)
     if success:
-        print("SUCCESS! Image generation complete!")
+        print("SUCCESS! Enhanced image generation complete!")
         print(f"Output: {output_path}")
+        print("\nFeatures implemented:")
+        print("  [X] Fredoka variable font with configurable axes")
+        print("  [X] iOS-style weather icon (PNG overlay)")
+        print("  [X] Header with logo and date (DD/MM/YYYY)")
+        print("  [X] Hebrew RTL city name")
+        print("  [X] Clean white header + sky gradient")
         print("\nNext steps:")
-        print("1. Open the image to verify Hebrew text displays correctly")
-        print("2. Check that temperature and emoji are visible")
-        print("3. Iterate on design/layout if needed")
+        print("  1. Open the image to verify all elements display correctly")
+        print("  2. Replace placeholder logo with converted ims_logo.png")
+        print("  3. Adjust CONFIGURATION constants to tweak design")
+        print("  4. Ready to expand to all 15 cities in Phase 3!")
     else:
         print("FAILED! Check error messages above")
     print("="*60)
