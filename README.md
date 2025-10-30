@@ -38,6 +38,12 @@ This project automates the creation of daily weather forecast images for the Isr
 - ✅ Header elements aligned with main list edges
 - ✅ Production-ready design (generate_forecast_image.py)
 
+### phase 3.5: Finalizing The Icon Gallery 📅 PLANNED - Next ToDo
+- Transforming the official IMS documentation from a hebrew PDF to a format easily accessible by our code
+- Finding online a full set of weather icon to go with the full tablr of the IMS codes
+- Only if no such fitting set is found, illustrating them manualy and providing SVG files
+- making sure the script works with all icons and not only the few test ones we used as placeholders
+
 ### Phase 4: Automation & Delivery 📅 PLANNED
 - Automated daily execution (6:00 AM)
 - Email delivery to social media team
