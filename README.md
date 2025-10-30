@@ -6,7 +6,7 @@
 
 This project automates the creation of daily weather forecast images for the Israel Meteorological Service (IMS) social media accounts. It downloads forecast data from IMS, processes it, and generates beautifully designed Instagram story images featuring 15 major Israeli cities.
 
-**Current Status:** Phase 2 Complete ✅ - Enhanced Image Generation (Single City POC)
+**Current Status:** Phase 3 Complete ✅ - All 15 Cities Image Generation
 
 ## Features
 
@@ -20,20 +20,23 @@ This project automates the creation of daily weather forecast images for the Isr
 - ✅ Dry-run mode for safe testing
 
 ### Phase 2: Image Generation (Single City POC) ✅ COMPLETE
-- ✅ Fredoka variable font with Hebrew support (configurable weight/width axes)
+- ✅ Variable font with Hebrew support (configurable weight/width axes)
 - ✅ iOS-style weather emoji icons (PNG overlays)
 - ✅ Professional header with IMS logo and forecast date (DD/MM/YYYY)
-- ✅ Hebrew RTL text rendering with python-bidi
+- ✅ Hebrew RTL text rendering
 - ✅ White header + sky-to-white gradient background
 - ✅ Easy-to-configure design constants
 - ✅ Generates 1080x1920px Instagram story images
-- ✅ Proof-of-concept with Tel Aviv data
+- ✅ Proof-of-concept with Tel Aviv data (exploration/generate_image.py)
 
-### Phase 3: Complete Design - All 15 Cities 📅 PLANNED
-- Single image displaying all 15 cities
-- Vertical layout with city rows (north to south)
-- Weather icon, temperature, and city name for each
-- Final production design implementation
+### Phase 3: Complete Design - All 15 Cities ✅ COMPLETE
+- ✅ Single image displaying all 15 cities (1080x1920px Instagram story)
+- ✅ Vertical layout with city rows (north to south)
+- ✅ Weather icon, temperature, and Hebrew city name for each
+- ✅ Open Sans variable font (weight 300-800, width 75-100)
+- ✅ Vertically centered list with balanced padding
+- ✅ Header elements aligned with main list edges
+- ✅ Production-ready design (generate_forecast_image.py)
 
 ### Phase 4: Automation & Delivery 📅 PLANNED
 - Automated daily execution (6:00 AM)
@@ -97,6 +100,11 @@ python extract_forecast.py
 python extract_forecast.py --date 2025-10-15
 ```
 
+**Generate forecast image (Phase 3):**
+```bash
+python generate_forecast_image.py
+```
+
 **View logs:**
 ```bash
 type logs\forecast_automation.log
@@ -121,7 +129,7 @@ Automated Daily Forecast/
 ├── 📁 Assets
 │   ├── assets/logos/             # IMS logo files
 │   ├── assets/weather_icons/    # Weather emoji PNGs
-│   └── fonts/                    # Fredoka variable font
+│   └── fonts/                    # Open Sans variable font
 │
 ├── 📁 Development
 │   └── exploration/              # Test & development scripts
@@ -172,13 +180,15 @@ Key settings are defined in [utils.py](utils.py):
 | `EXPECTED_CITY_COUNT` | 15 cities | Number of cities we expect in the data |
 | `XML_FILE` | `isr_cities_utf8.xml` | Main working XML file |
 
-### Image Generation (Phase 2)
-Design settings in [exploration/generate_image.py](exploration/generate_image.py):
-- **Fredoka Font**: Variable axes (weight 300-700, width 75-125)
+### Image Generation (Phase 3)
+Design settings in [generate_forecast_image.py](generate_forecast_image.py):
+- **Open Sans Font**: Variable axes (weight 300-800, width 75-100)
 - **Image Size**: 1080x1920px (Instagram story format)
-- **Header**: 180px white section with logo and date
-- **Weather Icons**: 180px iOS-style emoji PNGs
-- All visual parameters configurable via constants
+- **Header**: 180px white section with logo and date aligned to list edges
+- **Layout**: Vertically centered city list with balanced padding
+- **Weather Icons**: 65px iOS-style emoji PNGs per city row
+- **Cities**: All 15 cities in single image
+- All visual parameters configurable via constants at top of file
 
 ## Logging
 
@@ -280,5 +290,5 @@ For deployment questions, consult IMS IT Department.
 
 ---
 
-**Last Updated:** October 16, 2025
-**Phase Status:** Phase 2 Complete ✅ | Phase 3 Planned 📅
+**Last Updated:** October 30, 2025
+**Phase Status:** Phase 3 Complete ✅ | Phase 4 Planned 📅

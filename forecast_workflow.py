@@ -11,12 +11,14 @@ This script is designed to run automatically every morning at 6:00 AM.
 """
 
 import sys
+from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Dict
 
 from utils import setup_logging, get_today_date, print_separator
 from download_forecast import download_and_convert
 from extract_forecast import extract_forecast
+from generate_forecast_image import generate_all_cities_image
 
 
 # ============================================================================
@@ -24,11 +26,11 @@ from extract_forecast import extract_forecast
 # ============================================================================
 
 # Phase 1: Download + Extract only
-# Phase 2: Add image generation
-# Phase 3: Add complete design
+# Phase 2: Add image generation (single city POC)
+# Phase 3: All 15 cities image generation
 # Phase 4: Add email delivery
 
-CURRENT_PHASE = 1
+CURRENT_PHASE = 3
 
 
 # ============================================================================
@@ -89,12 +91,13 @@ def step_extract(logger, target_date: Optional[str] = None) -> Optional[List[Dic
     return cities_data
 
 
-def step_generate_image(cities_data: List[Dict], logger, dry_run: bool = False) -> bool:
+def step_generate_image(cities_data: List[Dict], forecast_date: str, logger, dry_run: bool = False) -> bool:
     """
-    Step 3: Generate Instagram story image (Phase 2 - Not Implemented Yet).
+    Step 3: Generate Instagram story image (Phase 3 - All 15 Cities).
 
     Args:
         cities_data: List of city data dictionaries
+        forecast_date: Forecast date in YYYY-MM-DD format
         logger: Logger instance
         dry_run: If True, simulate without creating image
 
@@ -102,14 +105,38 @@ def step_generate_image(cities_data: List[Dict], logger, dry_run: bool = False) 
         True if successful, False otherwise
     """
     logger.info("\n" + "=" * 60)
-    logger.info("STEP 3: GENERATE IMAGE (Phase 2 - Not Implemented)")
+    logger.info("STEP 3: GENERATE IMAGE (Phase 3 - All 15 Cities)")
     logger.info("=" * 60)
 
-    logger.info("Image generation will be implemented in Phase 2")
-    logger.info(f"Would generate 1080x1920px image with {len(cities_data)} cities")
+    if dry_run:
+        logger.info("DRY RUN: Skipping image generation")
+        logger.info(f"Would generate 1080x1920px image with {len(cities_data)} cities")
+        return True
 
-    # Placeholder for future implementation
-    return True
+    try:
+        # Setup output path
+        output_dir = Path(__file__).parent / "output"
+        output_dir.mkdir(exist_ok=True)
+        output_path = output_dir / "daily_forecast.jpg"
+
+        logger.info(f"Generating forecast image for {len(cities_data)} cities")
+        logger.info(f"Output path: {output_path}")
+
+        # Generate image
+        success = generate_all_cities_image(cities_data, forecast_date, output_path)
+
+        if success:
+            logger.info("Image generation completed successfully!")
+        else:
+            logger.error("Image generation failed")
+
+        return success
+
+    except Exception as e:
+        logger.error(f"Image generation error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 
 def step_send_email(image_path: str, logger, dry_run: bool = False) -> bool:
@@ -195,15 +222,15 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None) -> bo
         logger.info(f"Successfully extracted data for {len(cities_data)} cities")
 
         # ====================================================================
-        # STEP 3: GENERATE IMAGE (Phase 2 - Future)
+        # STEP 3: GENERATE IMAGE (Phase 3 - All 15 Cities)
         # ====================================================================
 
         if CURRENT_PHASE >= 2:
-            if not step_generate_image(cities_data, logger, dry_run=dry_run):
+            if not step_generate_image(cities_data, target_date, logger, dry_run=dry_run):
                 logger.error("Image generation failed")
                 workflow_success = False
         else:
-            logger.info("\nSkipping image generation (Phase 2 - not yet implemented)")
+            logger.info("\nSkipping image generation (Phase 2/3 - not yet implemented)")
 
         # ====================================================================
         # STEP 4: SEND EMAIL (Phase 4 - Future)

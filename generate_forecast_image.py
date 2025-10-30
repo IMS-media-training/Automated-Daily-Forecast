@@ -1,22 +1,18 @@
 """
-IMS Weather Forecast Automation - Phase 2: Enhanced Image Generation
+IMS Weather Forecast Automation - Phase 3: All 15 Cities Image Generation
 
-Single city image generation with:
+Generates single Instagram story image featuring all 15 Israeli cities with:
 - Fredoka variable font (configurable weight/width axes)
 - iOS-style weather icon PNGs
 - Header with IMS logo and forecast date
 - Hebrew RTL text support
+- Vertical city rows with line separators
 """
 
-import sys
 from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 from bidi.algorithm import get_display
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from extract_forecast import extract_forecast
 
 
 # ============================================================================
@@ -27,16 +23,16 @@ from extract_forecast import extract_forecast
 IMAGE_WIDTH = 1080
 IMAGE_HEIGHT = 1920
 
-# Font Configuration (Fredoka Variable Font)
-# Weight axis: 300 (Light) to 700 (Bold)
-# Width axis: 75 (Condensed) to 125 (Wide)
+# Font Configuration (Open Sans Variable Font)
+# Weight axis: 300 (Light) to 800 (ExtraBold)
+# Width axis: 75 (Condensed) to 100 (Normal)
 FONT_WEIGHT_CITY = 600      # SemiBold for city name
 FONT_WIDTH_CITY = 100       # Normal width
-FONT_SIZE_CITY = 120        # City name font size
+FONT_SIZE_CITY = 40         # City name font size (reduced for spacious layout)
 
 FONT_WEIGHT_TEMP = 500      # Medium for temperature
 FONT_WIDTH_TEMP = 100       # Normal width
-FONT_SIZE_TEMP = 100        # Temperature font size
+FONT_SIZE_TEMP = 35         # Temperature font size (reduced for spacious layout)
 
 FONT_WEIGHT_DATE = 400      # Regular for date
 FONT_WIDTH_DATE = 100       # Normal width
@@ -45,11 +41,15 @@ FONT_SIZE_DATE = 50         # Date font size
 # Header Configuration
 HEADER_HEIGHT = 180         # White header section height
 LOGO_HEIGHT = 120           # IMS logo display height
-LOGO_MARGIN_LEFT = 40       # Logo left margin
 LOGO_MARGIN_TOP = 30        # Logo top margin
 
-# Weather Icon Configuration
-ICON_SIZE = 180             # Weather icon display size (pixels)
+# City Row Configuration
+BOTTOM_PADDING = 160        # Bottom padding for breathing room
+ROW_HEIGHT = 105            # Height per city row (1580px ÷ 15 cities, accounting for bottom padding)
+ICON_SIZE = 65              # Weather icon size
+ROW_PADDING = 160           # Horizontal padding for breathing room (left/right margins)
+ELEMENT_SPACING = 40        # Spacing between icon, temp, and city name
+SEPARATOR_COLOR = (255, 255, 255, 50)  # Semi-transparent white line
 
 # Colors (RGB)
 COLOR_WHITE = (255, 255, 255)
@@ -58,12 +58,13 @@ COLOR_GRAY = (100, 100, 100)
 COLOR_SKY_LIGHT = (135, 206, 250)  # Light sky blue for gradient top
 
 # Paths
-OUTPUT_DIR = Path(__file__).parent.parent / "output"
-FONT_DIR = Path(__file__).parent.parent / "fonts"
-ASSETS_DIR = Path(__file__).parent.parent / "assets"
+BASE_DIR = Path(__file__).parent
+OUTPUT_DIR = BASE_DIR / "output"
+FONT_DIR = BASE_DIR / "fonts"
+ASSETS_DIR = BASE_DIR / "assets"
 
-# Font file
-FONT_VARIABLE = FONT_DIR / "Fredoka-Variable.ttf"
+# Font file (variable font)
+FONT_VARIABLE = FONT_DIR / "OpenSans-Variable.ttf"
 
 # Asset paths
 LOGO_PATH = ASSETS_DIR / "logos" / "IMS_logo.png"
@@ -84,19 +85,20 @@ WEATHER_ICONS = {
 
 def load_font_with_variation(size: int, weight: int, width: int) -> ImageFont.FreeTypeFont:
     """
-    Load Fredoka variable font with specific weight and width axes.
+    Load Open Sans variable font with specific weight and width axes.
 
     Args:
         size: Font size in pixels
-        weight: Weight axis value (300-700)
-        width: Width axis value (75-125)
+        weight: Weight axis value (300-800)
+        width: Width axis value (75-100)
 
     Returns:
         Configured font object
     """
     font = ImageFont.truetype(str(FONT_VARIABLE), size)
-    # Set variable font axes: [weight, width] for Fredoka
-    font.set_variation_by_axes([weight, width])
+    # Set variable font axes: Open Sans has 'wdth' (width) and 'wght' (weight)
+    # The axes list order is determined by the font file's fvar table
+    font.set_variation_by_axes([width, weight])
     return font
 
 
@@ -116,15 +118,16 @@ def render_hebrew_text(text: str) -> str:
     return text  # Direct rendering - try this first
 
 
-def load_weather_icon(weather_code: str) -> Image.Image:
+def load_weather_icon(weather_code: str, size: int) -> Image.Image:
     """
     Load weather icon PNG for the given weather code.
 
     Args:
         weather_code: Weather code from XML
+        size: Target size for the icon
 
     Returns:
-        PIL Image of weather icon, resized to ICON_SIZE
+        PIL Image of weather icon, resized to specified size
     """
     # Get icon filename from mapping, with fallback
     icon_filename = WEATHER_ICONS.get(weather_code, 'mostly_clear.png')
@@ -132,13 +135,13 @@ def load_weather_icon(weather_code: str) -> Image.Image:
 
     try:
         icon = Image.open(icon_path).convert('RGBA')
-        # Resize to configured icon size with high-quality resampling
-        icon = icon.resize((ICON_SIZE, ICON_SIZE), Image.Resampling.LANCZOS)
+        # Resize to specified size with high-quality resampling
+        icon = icon.resize((size, size), Image.Resampling.LANCZOS)
         return icon
     except Exception as e:
         print(f"  Warning: Could not load icon {icon_filename}: {e}")
         # Return a blank placeholder if icon fails to load
-        return Image.new('RGBA', (ICON_SIZE, ICON_SIZE), (0, 0, 0, 0))
+        return Image.new('RGBA', (size, size), (0, 0, 0, 0))
 
 
 def load_logo() -> Image.Image:
@@ -226,13 +229,13 @@ def add_header_content(image: Image.Image, date_str: str) -> None:
         image: PIL Image object to modify
         date_str: Forecast date string (YYYY-MM-DD)
     """
-    # Load and paste logo
+    # Load and paste logo (aligned with main list left edge)
     logo = load_logo()
-    logo_x = LOGO_MARGIN_LEFT
+    logo_x = ROW_PADDING  # Align with main list padding
     logo_y = LOGO_MARGIN_TOP
     image.paste(logo, (logo_x, logo_y), logo)  # Use logo as mask for transparency
 
-    # Add date text (right side of header)
+    # Add date text (right side of header, aligned with main list right edge)
     draw = ImageDraw.Draw(image)
     date_font = load_font_with_variation(FONT_SIZE_DATE, FONT_WEIGHT_DATE, FONT_WIDTH_DATE)
 
@@ -242,19 +245,86 @@ def add_header_content(image: Image.Image, date_str: str) -> None:
     bbox = draw.textbbox((0, 0), formatted_date, font=date_font)
     text_width = bbox[2] - bbox[0]
 
-    # Position date on right side with margin
-    date_x = IMAGE_WIDTH - text_width - LOGO_MARGIN_LEFT
+    # Position date on right side aligned with main list padding
+    date_x = IMAGE_WIDTH - text_width - ROW_PADDING  # Align with main list padding
     date_y = (HEADER_HEIGHT - (bbox[3] - bbox[1])) // 2  # Vertically center in header
 
     draw.text((date_x, date_y), formatted_date, fill=COLOR_BLACK, font=date_font)
 
 
-def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) -> bool:
+def draw_city_row(image: Image.Image, draw: ImageDraw.Draw, city_data: dict,
+                  y_position: int, font_city: ImageFont.FreeTypeFont,
+                  font_temp: ImageFont.FreeTypeFont, is_last_row: bool = False) -> None:
     """
-    Generate a weather forecast image for one city.
+    Draw a single city row with Hebrew name, weather icon, and temperature.
+
+    Layout (left to right): [Weather Icon] | [Temperature Range] | [Hebrew City Name]
 
     Args:
+        image: PIL Image object to modify
+        draw: ImageDraw object for drawing
         city_data: Dictionary with city forecast data
+        y_position: Top Y coordinate of this row
+        font_city: Font for city name
+        font_temp: Font for temperature
+        is_last_row: If True, don't draw separator line below
+    """
+    # Prepare text content
+    city_name_heb = city_data['name_heb']
+    city_name_display = render_hebrew_text(city_name_heb)
+
+    temp_min = city_data['min_temp']
+    temp_max = city_data['max_temp']
+    temp_text = f"{temp_min}-{temp_max}°C"
+
+    weather_code = city_data['weather_code']
+
+    # Calculate vertical center of row
+    row_center_y = y_position + (ROW_HEIGHT // 2)
+
+    # Position 1: Weather Icon (left side)
+    icon = load_weather_icon(weather_code, ICON_SIZE)
+    icon_x = ROW_PADDING  # Left alignment at padding boundary
+    icon_y = row_center_y - (ICON_SIZE // 2)  # Vertically centered in row
+
+    # Paste icon with transparency
+    image.paste(icon, (icon_x, icon_y), icon)
+
+    # Position 2: Temperature (after icon)
+    temp_bbox = draw.textbbox((0, 0), temp_text, font=font_temp)
+    temp_text_width = temp_bbox[2] - temp_bbox[0]
+    temp_text_height = temp_bbox[3] - temp_bbox[1]
+
+    temp_x = icon_x + ICON_SIZE + ELEMENT_SPACING  # After icon with spacing
+    temp_y = row_center_y - (temp_text_height // 2)
+
+    draw.text((temp_x, temp_y), temp_text, fill=COLOR_GRAY, font=font_temp)
+
+    # Position 3: Hebrew City Name (right side)
+    # Get text dimensions for proper positioning
+    city_bbox = draw.textbbox((0, 0), city_name_display, font=font_city)
+    city_text_width = city_bbox[2] - city_bbox[0]
+    city_text_height = city_bbox[3] - city_bbox[1]
+
+    city_x = IMAGE_WIDTH - ROW_PADDING - city_text_width  # Right alignment with padding
+    city_y = row_center_y - (city_text_height // 2)
+
+    draw.text((city_x, city_y), city_name_display, fill=COLOR_BLACK, font=font_city)
+
+    # Draw separator line below row (except for last row)
+    if not is_last_row:
+        separator_y = y_position + ROW_HEIGHT
+        # Draw semi-transparent white line
+        draw.line([(ROW_PADDING, separator_y), (IMAGE_WIDTH - ROW_PADDING, separator_y)],
+                 fill=SEPARATOR_COLOR, width=1)
+
+
+def generate_all_cities_image(cities_data: list, forecast_date: str, output_path: Path) -> bool:
+    """
+    Generate a weather forecast image for all 15 cities.
+
+    Args:
+        cities_data: List of dictionaries with city forecast data (should be 15 cities)
         forecast_date: Date of forecast (YYYY-MM-DD)
         output_path: Path to save the image
 
@@ -262,7 +332,7 @@ def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) 
         True if successful, False otherwise
     """
     try:
-        print(f"\nGenerating image for: {city_data['name_eng']}")
+        print(f"\nGenerating forecast image for {len(cities_data)} cities")
 
         # Create canvas with white header and gradient background
         print("  Creating canvas with header and gradient background...")
@@ -276,7 +346,7 @@ def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) 
         draw = ImageDraw.Draw(image)
 
         # Load fonts
-        print("  Loading Fredoka variable fonts...")
+        print("  Loading Open Sans variable fonts...")
         font_city_name = load_font_with_variation(
             FONT_SIZE_CITY, FONT_WEIGHT_CITY, FONT_WIDTH_CITY
         )
@@ -284,60 +354,27 @@ def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) 
             FONT_SIZE_TEMP, FONT_WEIGHT_TEMP, FONT_WIDTH_TEMP
         )
 
-        # Prepare text content
-        city_name_heb = city_data['name_heb']
-        city_name_display = render_hebrew_text(city_name_heb)
+        # Calculate total list height and center it vertically in available space
+        num_cities = len(cities_data)
+        total_list_height = num_cities * ROW_HEIGHT
+        available_height = IMAGE_HEIGHT - HEADER_HEIGHT
+        vertical_offset = (available_height - total_list_height) // 2
 
-        temp_min = city_data['min_temp']
-        temp_max = city_data['max_temp']
-        temp_text = f"{temp_min}-{temp_max}°C"
+        # Calculate starting Y position for first city row (centered)
+        content_start = HEADER_HEIGHT + vertical_offset
 
-        weather_code = city_data['weather_code']
+        # Draw each city row
+        print(f"  Drawing {len(cities_data)} city rows (vertically centered)...")
+        for idx, city_data in enumerate(cities_data):
+            y_pos = content_start + (idx * ROW_HEIGHT)
+            is_last = (idx == len(cities_data) - 1)
 
-        print(f"  Temperature: {temp_text}")
-        print(f"  Weather Code: {weather_code}")
+            print(f"    [{idx+1:2d}/15] {city_data['name_eng']:20s} - {city_data['min_temp']}-{city_data['max_temp']}°C")
 
-        # Calculate vertical positions (centered in content area below header)
-        content_start = HEADER_HEIGHT
-        content_height = IMAGE_HEIGHT - HEADER_HEIGHT
-        center_y = content_start + (content_height // 2)
-
-        # Position 1: Weather icon (PNG) at top-center of content area
-        icon_y = center_y - 300
-
-        print("  Loading weather icon...")
-        weather_icon = load_weather_icon(weather_code)
-
-        # Center icon horizontally
-        icon_x = (IMAGE_WIDTH - ICON_SIZE) // 2
-
-        # Paste icon with transparency
-        image.paste(weather_icon, (icon_x, icon_y), weather_icon)
-
-        # Position 2: City name below icon
-        city_y = icon_y + ICON_SIZE + 40
-
-        # Get city name dimensions for centering
-        city_bbox = draw.textbbox((0, 0), city_name_display, font=font_city_name)
-        city_width = city_bbox[2] - city_bbox[0]
-        city_x = (IMAGE_WIDTH - city_width) // 2
-
-        # Draw city name (Hebrew RTL)
-        draw.text((city_x, city_y), city_name_display, fill=COLOR_BLACK, font=font_city_name)
-
-        # Position 3: Temperature below city name
-        temp_y = city_y + 150
-
-        # Get temperature dimensions for centering
-        temp_bbox = draw.textbbox((0, 0), temp_text, font=font_temp)
-        temp_width = temp_bbox[2] - temp_bbox[0]
-        temp_x = (IMAGE_WIDTH - temp_width) // 2
-
-        # Draw temperature
-        draw.text((temp_x, temp_y), temp_text, fill=COLOR_GRAY, font=font_temp)
+            draw_city_row(image, draw, city_data, y_pos, font_city_name, font_temp, is_last)
 
         # Save image
-        print(f"  Saving image to: {output_path}")
+        print(f"\n  Saving image to: {output_path}")
         image.save(output_path, 'JPEG', quality=95)
         print("  Image saved successfully!")
 
@@ -351,13 +388,19 @@ def generate_city_image(city_data: dict, forecast_date: str, output_path: Path) 
 
 
 # ============================================================================
-# MAIN SCRIPT
+# MAIN SCRIPT (for standalone testing)
 # ============================================================================
 
 def main():
-    """Main entry point for the script."""
+    """Main entry point for standalone testing."""
+    import sys
+
+    # Add current directory to path for imports
+    sys.path.insert(0, str(BASE_DIR))
+    from extract_forecast import extract_forecast
+
     print("="*60)
-    print("IMS WEATHER FORECAST - ENHANCED IMAGE GENERATION")
+    print("IMS WEATHER FORECAST - PHASE 3: ALL 15 CITIES")
     print("="*60)
 
     # Extract forecast data
@@ -368,43 +411,33 @@ def main():
         print("ERROR: Failed to extract forecast data")
         sys.exit(1)
 
-    # Get forecast date from extracted data (use today's date as fallback)
+    print(f"Extracted {len(cities_data)} cities")
+
+    # Get forecast date (use today's date as fallback)
     forecast_date = datetime.now().strftime('%Y-%m-%d')
-
-    # Find Tel Aviv (our test city)
-    tel_aviv = None
-    for city in cities_data:
-        if city['name_eng'] == 'Tel Aviv - Yafo':
-            tel_aviv = city
-            break
-
-    if not tel_aviv:
-        print("ERROR: Tel Aviv not found in forecast data")
-        sys.exit(1)
 
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(exist_ok=True)
 
     # Generate image
-    output_path = OUTPUT_DIR / "test_city_forecast.jpg"
-    success = generate_city_image(tel_aviv, forecast_date, output_path)
+    output_path = OUTPUT_DIR / "daily_forecast.jpg"
+    success = generate_all_cities_image(cities_data, forecast_date, output_path)
 
     # Summary
     print("\n" + "="*60)
     if success:
-        print("SUCCESS! Enhanced image generation complete!")
+        print("SUCCESS! Phase 3 image generation complete!")
         print(f"Output: {output_path}")
         print("\nFeatures implemented:")
-        print("  [X] Fredoka variable font with configurable axes")
-        print("  [X] iOS-style weather icon (PNG overlay)")
-        print("  [X] Header with logo and date (DD/MM/YYYY)")
-        print("  [X] Hebrew RTL city name")
-        print("  [X] Clean white header + sky gradient")
-        print("\nNext steps:")
-        print("  1. Open the image to verify all elements display correctly")
-        print("  2. Replace placeholder logo with converted ims_logo.png")
-        print("  3. Adjust CONFIGURATION constants to tweak design")
-        print("  4. Ready to expand to all 15 cities in Phase 3!")
+        print("  [X] All 15 Israeli cities in single image")
+        print("  [X] Vertical layout with balanced rows")
+        print("  [X] Hebrew city names (RTL)")
+        print("  [X] Weather icons for each city")
+        print("  [X] Temperature ranges")
+        print("  [X] Line separators between rows")
+        print("  [X] Sky blue gradient background")
+        print("  [X] Professional header with IMS logo and date")
+        print("\nReady for Phase 4: Automation & Email Delivery!")
     else:
         print("FAILED! Check error messages above")
     print("="*60)
