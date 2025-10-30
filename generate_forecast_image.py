@@ -12,12 +12,19 @@ Generates single Instagram story image featuring all 15 Israeli cities with:
 from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
-from bidi.algorithm import get_display
+from bidi.algorithm import get_display # For RTL text handling
+from PIL import features # To check for Raqm support
 
 
 # ============================================================================
 # CONFIGURATION - Easy to modify design parameters
 # ============================================================================
+
+# --- FOR TESTING HEBREW RENDERING ---
+# Set to True to simulate an environment WITH libraqm support.
+# Set to False to simulate an environment WITHOUT libraqm support.
+# Set to None for automatic detection (production mode).
+TEST_MODE_FORCE_RAQM = None
 
 # Image dimensions (Instagram story format)
 IMAGE_WIDTH = 1080
@@ -104,7 +111,7 @@ def load_font_with_variation(size: int, weight: int, width: int) -> ImageFont.Fr
 
 def render_hebrew_text(text: str) -> str:
     """
-    Convert Hebrew text to proper RTL display format.
+    Convert Hebrew text to proper RTL display format if Pillow lacks Raqm support.
 
     Args:
         text: Hebrew text string
@@ -112,10 +119,18 @@ def render_hebrew_text(text: str) -> str:
     Returns:
         RTL-formatted text ready for rendering
     """
-    # NOTE: In some environments, Pillow handles Hebrew RTL automatically.
-    # If Hebrew appears reversed, try returning text directly without get_display()
-    # return get_display(text)  # Uncomment if Hebrew appears reversed
-    return text  # Direct rendering - try this first
+    has_raqm = features.check('raqm')
+    if TEST_MODE_FORCE_RAQM is not None:
+        has_raqm = TEST_MODE_FORCE_RAQM
+
+    # If Pillow is built with Raqm support, it can handle RTL rendering itself.
+    # We just need to pass `direction='rtl'` to the draw.text() call.
+    if has_raqm:
+        print("  (Hebrew Rendering: Using Pillow's Raqm support)")
+        return text
+    # Otherwise, we manually shape the text for older/basic Pillow installations.
+    print("  (Hebrew Rendering: Using python-bidi fallback)")
+    return get_display(text)
 
 
 def load_weather_icon(weather_code: str, size: int) -> Image.Image:
@@ -309,7 +324,16 @@ def draw_city_row(image: Image.Image, draw: ImageDraw.Draw, city_data: dict,
     city_x = IMAGE_WIDTH - ROW_PADDING - city_text_width  # Right alignment with padding
     city_y = row_center_y - (city_text_height // 2)
 
-    draw.text((city_x, city_y), city_name_display, fill=COLOR_BLACK, font=font_city)
+    # Conditionally add `direction='rtl'` only if Raqm support is available
+    has_raqm = features.check('raqm')
+    if TEST_MODE_FORCE_RAQM is not None:
+        has_raqm = TEST_MODE_FORCE_RAQM
+
+    if has_raqm:
+        draw.text((city_x, city_y), city_name_display, fill=COLOR_BLACK, font=font_city, direction='rtl')
+    else:
+        # Otherwise, draw the pre-shaped text without the direction argument
+        draw.text((city_x, city_y), city_name_display, fill=COLOR_BLACK, font=font_city)
 
     # Draw separator line below row (except for last row)
     if not is_last_row:
@@ -395,17 +419,22 @@ def main():
     """Main entry point for standalone testing."""
     import sys
 
-    # Add current directory to path for imports
+    # Add project root to path for imports
     sys.path.insert(0, str(BASE_DIR))
     from extract_forecast import extract_forecast
+    from utils import setup_logging
 
     print("="*60)
     print("IMS WEATHER FORECAST - PHASE 3: ALL 15 CITIES")
     print("="*60)
 
+    # Setup logging for standalone run
+    logger = setup_logging()
+
     # Extract forecast data
     print("\nExtracting forecast data...")
-    cities_data = extract_forecast()
+    # Pass the logger to the extraction function
+    cities_data = extract_forecast(logger=logger)
 
     if not cities_data:
         print("ERROR: Failed to extract forecast data")

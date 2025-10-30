@@ -23,7 +23,7 @@ This project automates the creation of daily weather forecast images for the Isr
 - ✅ Variable font with Hebrew support (configurable weight/width axes)
 - ✅ iOS-style weather emoji icons (PNG overlays)
 - ✅ Professional header with IMS logo and forecast date (DD/MM/YYYY)
-- ✅ Hebrew RTL text rendering
+- ✅ Robust Hebrew RTL text rendering (auto-adapts to environment)
 - ✅ White header + sky-to-white gradient background
 - ✅ Easy-to-configure design constants
 - ✅ Generates 1080x1920px Instagram story images
