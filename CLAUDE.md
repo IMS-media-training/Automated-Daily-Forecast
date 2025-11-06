@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 IMS Weather Forecast Automation - Automated daily weather forecast generator for Israeli cities. Downloads forecast data from Israel Meteorological Service (IMS), processes it, and generates Instagram-ready story images featuring 15 major Israeli cities.
 
-**Current Status:** Phase 4 Complete (Automation & Email via GitHub Actions) | Testing & Deployment Phase
+**Current Status:** Phase 4a Complete (SMTP Email Delivery) | Phase 4b In Progress (Workflow Integration)
 
 ## Essential Commands
 
@@ -31,14 +31,11 @@ python extract_forecast.py
 # Generate forecast image (all 15 cities - Phase 3)
 python generate_forecast_image.py
 
-# Test email delivery (Phase 4 - dry-run)
-python send_email.py --dry-run
+# Test email delivery (Phase 4a - dry-run)
+python send_email_smtp.py --dry-run
 
-# Send test email (Phase 4 - requires env vars)
-export SENDGRID_API_KEY='your-api-key'
-export EMAIL_SENDER='forecast@example.com'
-export EMAIL_RECIPIENT='recipient@example.com'
-python send_email.py --image output/daily_forecast.jpg
+# Send test email (Phase 4a - requires .env file)
+python send_email_smtp.py
 
 # Test image generation (Phase 2 POC - single city)
 python exploration/generate_image.py
@@ -95,16 +92,16 @@ pip install -r requirements.txt
    - Professional header with IMS logo and date aligned with list edges
    - Open Sans variable font with Hebrew support
 
-4. **Email Delivery Phase** (Phase 4 complete)
-   - Sends forecast image via SendGrid API
-   - Professional HTML email template with Hebrew support
+4. **Email Delivery Phase** (Phase 4a complete - SMTP)
+   - Sends forecast image via SMTP (built-in smtplib)
+   - Professional HTML email template with Hebrew RTL support
    - Attachment: daily_forecast.jpg (Instagram-ready)
-   - Environment variable configuration for security
-   - Supports multiple recipients (comma-separated)
+   - Environment variable configuration via .env file (secure)
+   - Dry-run mode for safe testing before real sends
 
 5. **Orchestration** (`forecast_workflow.py`)
    - Main entry point that coordinates all phases
-   - Phase-aware execution (currently Phase 4)
+   - Phase-aware execution (currently Phase 3, Phase 4 integration next)
    - Handles dry-run mode for safe testing
    - Comprehensive logging to console + file
    - Graceful error handling with fallback strategies
@@ -144,13 +141,14 @@ pip install -r requirements.txt
 - Data validation (city count, required fields)
 - Formatting utilities
 
-**send_email.py** - Email delivery via SendGrid (Phase 4)
-- SendGrid API integration for professional email delivery
+**send_email_smtp.py** - Email delivery via SMTP (Phase 4a)
+- Built-in smtplib for simple, reliable email delivery
 - HTML email template with Hebrew RTL support
-- Image attachment with base64 encoding
-- Environment variable configuration (SENDGRID_API_KEY, EMAIL_SENDER, EMAIL_RECIPIENT)
+- Image attachment with MIME encoding
+- Environment variable configuration via .env file (EMAIL_ADDRESS, EMAIL_PASSWORD, RECIPIENT_EMAIL, SMTP_SERVER, SMTP_PORT)
 - Dry-run mode for testing without sending
-- Comprehensive error handling with helpful diagnostics
+- Environment validation with clear error messages
+- Gmail App Password support (16-character passwords)
 - Command-line interface for standalone testing
 
 ### Image Generation System (Phase 3)
@@ -355,10 +353,12 @@ The project follows an incremental phase system:
 - **Phase 2:** Single city image generation POC (COMPLETE)
 - **Phase 3:** Full design with all 15 cities (COMPLETE)
 - **Phase 3.5:** Weather icon system with full IMS code coverage (COMPLETE)
-- **Phase 4:** Automation + Email delivery via GitHub Actions (COMPLETE)
-- **Phase 5:** Server deployment (FUTURE)
+- **Phase 4a:** Basic SMTP email delivery (COMPLETE)
+- **Phase 4b:** Workflow integration (IN PROGRESS)
+- **Phase 4c:** GitHub Actions automation (PLANNED)
+- **Phase 5:** Production server deployment (FUTURE)
 
-**CURRENT_PHASE** constant in forecast_workflow.py controls which steps execute (currently set to 4).
+**CURRENT_PHASE** constant in forecast_workflow.py controls which steps execute (currently set to 3, will be updated to 4 in Phase 4b).
 
 ### Making Changes to Design
 
@@ -522,58 +522,153 @@ python generate_forecast_image.py  # May fail if cwd is wrong
    - Claude Code may reset working directory between bash commands
    - In bash: Use `cd /full/path && command` or absolute paths
 
-## GitHub Actions Automation (Phase 4)
+## Phase 4: Email Delivery (SMTP Implementation)
 
-### Setup Instructions
+### Phase 4a: Basic SMTP Email (COMPLETE ✅)
 
-**1. Configure SendGrid:**
-- Sign up at https://sendgrid.com (free tier: 100 emails/day)
-- Verify sender email address
-- Generate API key (Settings → API Keys)
+**Status:** Working perfectly - email delivery validated locally
 
-**2. Configure GitHub Secrets:**
-Go to: Repository Settings → Secrets and variables → Actions → New repository secret
+**What We Built:**
+- Simple SMTP implementation using Python's built-in `smtplib`
+- HTML email template with Hebrew RTL support
+- Dry-run mode for safe testing
+- Environment variable configuration via `.env` file
+- Professional email formatting with forecast image attachment
 
-Add three secrets:
-- `SENDGRID_API_KEY`: Your SendGrid API key
-- `EMAIL_SENDER`: From email (must be verified in SendGrid)
-- `EMAIL_RECIPIENT`: To email(s) - comma-separated for multiple
+**Key Files:**
+- `send_email_smtp.py` - Complete SMTP email delivery (424 lines)
+- `.env.example` - Environment variable template
+- `.env` - Local credentials (in .gitignore, never committed)
 
-**3. Enable GitHub Actions:**
-- Workflow file: `.github/workflows/daily-forecast.yml`
-- Scheduled run: 6:00 AM Israel time (3:00 AM UTC)
-- Manual trigger: Actions tab → Run workflow
+**Testing Results:**
+- ✅ Dry-run mode validated configuration
+- ✅ Real email sent successfully
+- ✅ Email received with correct Hebrew RTL formatting
+- ✅ Image attachment working (205KB forecast image)
 
-**4. Monitor Execution:**
-- View runs: Actions tab in GitHub
-- Download artifacts: Images and logs available for 90 days
-- Email notifications: GitHub sends alerts on failures
+**Critical Success Factors (vs Phase 4 v1 failures):**
 
-### Workflow Features
+1. **Actually load .env file:**
+   ```python
+   from dotenv import load_dotenv
+   load_dotenv()  # MUST be called before os.environ.get()
+   ```
+   Phase 4 v1 added python-dotenv to requirements but never imported/used it!
 
-- **Scheduled execution:** Cron job runs daily at 6:00 AM Israel time
-- **Manual trigger:** Can run anytime via GitHub UI
-- **Dry-run mode:** Test without sending email
-- **Artifact storage:** Generated images kept for 90 days
-- **Log persistence:** Automation logs kept for 30 days
-- **Failure notifications:** GitHub emails on errors
+2. **Consistent variable naming everywhere:**
+   - Same names in: `.env.example`, code, documentation
+   - Used: `EMAIL_ADDRESS`, `EMAIL_PASSWORD`, `RECIPIENT_EMAIL`
+   - NOT: `SENDER_EMAIL`, `FROM_EMAIL`, `TO_EMAIL` (v1 had mismatches)
 
-### Testing Workflow
+3. **Simple approach first:**
+   - Started with built-in `smtplib` (no external dependencies)
+   - Avoided SendGrid complexity until proven necessary
+   - Tested locally before any automation
 
-```bash
-# Test locally with dry-run
-export SENDGRID_API_KEY='your-key'
-export EMAIL_SENDER='sender@example.com'
-export EMAIL_RECIPIENT='recipient@example.com'
-python forecast_workflow.py --dry-run
+4. **Environment validation with clear errors:**
+   ```python
+   def validate_environment_variables():
+       # Check all required vars, fail fast with helpful message
+   ```
 
-# Test locally with real email
-python forecast_workflow.py
+5. **Security from day 1:**
+   - `.env` in `.gitignore` before creating any credentials
+   - Temporary Gmail account for testing (zero personal risk)
+   - No credentials ever in code or git history
 
-# Test on GitHub Actions (manual trigger)
-# Go to: Actions → IMS Daily Weather Forecast → Run workflow
-# Select "dry_run: true" for testing
-```
+**Setup Instructions:**
+
+1. **Create .env file from template:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your actual credentials
+   ```
+
+2. **Required environment variables:**
+   ```bash
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=587
+   EMAIL_ADDRESS=your-gmail@gmail.com
+   EMAIL_PASSWORD=your-16-char-app-password
+   RECIPIENT_EMAIL=recipient@example.com
+   ```
+
+3. **Generate Gmail App Password:**
+   - Enable 2-Step Verification on Google account
+   - Go to: https://myaccount.google.com/apppasswords
+   - Generate 16-character App Password
+   - Use App Password (NOT regular Gmail password)
+
+4. **Test email delivery:**
+   ```bash
+   # Test configuration without sending
+   python send_email_smtp.py --dry-run
+
+   # Send real test email
+   python send_email_smtp.py
+   ```
+
+### Phase 4b: Workflow Integration (IN PROGRESS 🔄)
+
+**Next Steps:**
+- Integrate `send_email_smtp.py` into `forecast_workflow.py`
+- Update CURRENT_PHASE from 3 to 4
+- Add email as Step 4 after image generation
+- Test complete workflow: download → extract → generate → email
+- Email failures should be CRITICAL (workflow fails, not silent)
+
+### Phase 4c: GitHub Actions Automation (PLANNED 📋)
+
+**After Phase 4b completes:**
+- Add GitHub Secrets for email credentials
+- Create GitHub Actions workflow
+- Daily scheduled run (6:00 AM Israel time)
+- Manual trigger for testing
+- Only after local workflow 100% reliable
+
+### Key Lessons Learned (Phase 4a Session - Nov 6, 2025)
+
+**What Made Phase 4a Succeed:**
+
+1. **Incremental approach:**
+   - Built SMTP first, validate locally, automation later
+   - Each step fully working before moving to next
+   - Time to working email: ~30 minutes (vs v1 never worked)
+
+2. **Configuration discipline:**
+   - Chose variable names upfront, used consistently everywhere
+   - Documented in .env.example before writing any code
+   - No "fix it later" approach to naming
+
+3. **Proper dependency usage:**
+   - Don't just add to requirements.txt - actually import and use
+   - Test that environment variables are loaded correctly
+   - Validate early with clear error messages
+
+4. **Security mindset:**
+   - .gitignore protection BEFORE creating credentials
+   - Used temporary Gmail (no personal risk if leaked)
+   - Verified `git status` before every commit
+
+5. **Test locally first:**
+   - GitHub Actions should be LAST step, not first
+   - Local testing catches 90% of issues immediately
+   - Much faster debug cycle than waiting for CI
+
+**Anti-Patterns to Avoid (from Phase 4 v1):**
+
+❌ Adding library to requirements.txt but not using it
+❌ Inconsistent variable names across files
+❌ Testing only in CI/automation environment
+❌ Silent failures (marking errors as "non-critical")
+❌ Premature complexity (SendGrid before basic SMTP works)
+
+**Time Comparison:**
+
+| Approach | Time to Working Email | Local Testing |
+|----------|----------------------|---------------|
+| Phase 4 v1 (SendGrid + GitHub Actions) | Never worked | ❌ Skipped |
+| Phase 4a v2 (SMTP locally first) | 30 minutes | ✅ Validated |
 
 ## Future Phases
 
