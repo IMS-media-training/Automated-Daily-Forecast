@@ -19,7 +19,7 @@ from utils import setup_logging, get_today_date, print_separator
 from download_forecast import download_and_convert
 from extract_forecast import extract_forecast
 from generate_forecast_image import generate_all_cities_image
-from send_email import send_forecast_email
+from send_email_smtp import send_email
 
 
 # ============================================================================
@@ -144,36 +144,41 @@ def step_send_email(image_path: str, forecast_date: str, logger, dry_run: bool =
     """
     Step 4: Send email to social media manager (Phase 4).
 
+    Uses send_email_smtp.py for SMTP-based email delivery.
+    Email failures are CRITICAL - workflow will fail if email fails.
+
     Args:
         image_path: Path to generated image
-        forecast_date: Forecast date in YYYY-MM-DD format
-        logger: Logger instance
+        forecast_date: Forecast date in YYYY-MM-DD format (for logging only - email calculates internally)
+        logger: Logger instance (for workflow logging - email has its own logger)
         dry_run: If True, simulate without sending
 
     Returns:
         True if successful, False otherwise
     """
     logger.info("\n" + "=" * 60)
-    logger.info("STEP 4: SEND EMAIL (Phase 4)")
+    logger.info("STEP 4: SEND EMAIL (Phase 4 - SMTP)")
     logger.info("=" * 60)
 
     try:
-        success = send_forecast_email(
+        # Note: send_email() uses its own logger and calculates forecast_date internally
+        # We only pass image_path and dry_run flag
+        success = send_email(
             image_path=image_path,
-            forecast_date=forecast_date,
-            logger=logger,
             dry_run=dry_run
         )
 
         if success:
-            logger.info("Email delivery completed successfully!")
+            logger.info("✓ Email delivery completed successfully!")
         else:
-            logger.error("Email delivery failed")
+            logger.error("✗ Email delivery failed")
+            logger.error("Email failure is CRITICAL - check environment variables and configuration")
 
         return success
 
     except Exception as e:
-        logger.error(f"Email delivery error: {e}")
+        logger.error(f"✗ Email delivery error: {e}")
+        logger.error("Email failure is CRITICAL - workflow cannot continue")
         import traceback
         traceback.print_exc()
         return False
