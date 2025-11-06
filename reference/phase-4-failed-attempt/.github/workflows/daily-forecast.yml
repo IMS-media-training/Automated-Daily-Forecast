@@ -1,0 +1,173 @@
+name: IMS Daily Weather Forecast
+
+# ============================================================================
+# TRIGGER CONFIGURATION
+# ============================================================================
+
+on:
+  # Scheduled run: Every day at 6:00 AM Israel time (3:00 AM UTC)
+  schedule:
+    - cron: '0 3 * * *'  # 3:00 AM UTC = 6:00 AM Israel (Standard Time)
+    # Note: During DST (Daylight Saving Time), Israel is UTC+3, so this runs at 6:00 AM
+    # During standard time, Israel is UTC+2, so this runs at 5:00 AM
+    # Adjust cron to '0 4 * * *' if you want consistent 6:00 AM Israel time year-round
+
+  # Manual trigger: Allow running the workflow manually from GitHub UI
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (test without sending email)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+
+env:
+  PYTHON_VERSION: '3.13'
+
+# ============================================================================
+# JOBS
+# ============================================================================
+
+jobs:
+  generate-and-send-forecast:
+    name: Generate & Send Daily Forecast
+    runs-on: ubuntu-latest
+
+    # Timeout after 15 minutes (should complete in ~2-3 minutes)
+    timeout-minutes: 15
+
+    steps:
+      # ======================================================================
+      # STEP 1: CHECKOUT CODE
+      # ======================================================================
+
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      # ======================================================================
+      # STEP 2: SETUP PYTHON
+      # ======================================================================
+
+      - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'  # Cache pip dependencies for faster runs
+
+      # ======================================================================
+      # STEP 3: INSTALL DEPENDENCIES
+      # ======================================================================
+
+      - name: 📦 Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ======================================================================
+      # STEP 4: VERIFY INSTALLATION
+      # ======================================================================
+
+      - name: ✅ Verify Installation
+        run: |
+          python --version
+          pip list
+          echo "Working directory: $(pwd)"
+          echo "Repository contents:"
+          ls -la
+
+      # ======================================================================
+      # STEP 5: RUN WORKFLOW
+      # ======================================================================
+
+      - name: 🚀 Run Forecast Workflow
+        env:
+          # SendGrid credentials from GitHub Secrets
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
+        run: |
+          # Check if dry-run mode is enabled
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "Running in DRY RUN mode"
+            python forecast_workflow.py --dry-run
+          else
+            echo "Running in PRODUCTION mode"
+            python forecast_workflow.py
+          fi
+
+      # ======================================================================
+      # STEP 6: UPLOAD ARTIFACTS
+      # ======================================================================
+
+      - name: 📤 Upload Generated Image
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if workflow fails
+        with:
+          name: forecast-image-${{ github.run_number }}
+          path: output/daily_forecast.jpg
+          retention-days: 90  # Keep for 90 days
+
+      - name: 📤 Upload Logs
+        uses: actions/upload-artifact@v4
+        if: always()  # Upload even if workflow fails
+        with:
+          name: logs-${{ github.run_number }}
+          path: logs/forecast_automation.log
+          retention-days: 30  # Keep logs for 30 days
+
+      # ======================================================================
+      # STEP 7: SUMMARY
+      # ======================================================================
+
+      - name: 📊 Workflow Summary
+        if: always()
+        run: |
+          echo "## 🌤️ IMS Daily Forecast Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Number:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "**Mode:** 🧪 Dry Run (No Email Sent)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Mode:** 🚀 Production (Email Sent)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Workflow Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Download XML from IMS" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Extract forecast data (15 cities)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Generate Instagram story image" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Send email via SendGrid" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Generated Image](../artifacts/forecast-image-${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Logs](../artifacts/logs-${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+
+# ============================================================================
+# NOTIFICATIONS
+# ============================================================================
+#
+# GitHub will automatically send email notifications on workflow failures
+# to the repository owner and collaborators who have starred the repo.
+#
+# To customize notifications:
+# 1. Go to: Settings → Notifications
+# 2. Configure "Actions" notifications
+# 3. Choose email/mobile/web preferences
+#
+# Additional notification options:
+# - Slack: Add a Slack webhook step
+# - Discord: Add a Discord webhook step
+# - Telegram: Add a Telegram bot step
+# ============================================================================

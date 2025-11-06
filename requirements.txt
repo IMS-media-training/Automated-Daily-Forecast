@@ -19,13 +19,11 @@ Pillow>=10.0.0
 python-bidi>=0.4.2
 
 # ============================================================================
-# Phase 4: Email Delivery
+# Phase 4: Email Delivery (SMTP)
 # ============================================================================
 
-# SendGrid API for professional email delivery
-sendgrid>=6.11.0
-
-# Environment variable management for local development and API keys
+# Environment variable management for SMTP credentials and configuration
+# Note: Built-in smtplib is used for email sending (no external dependencies)
 python-dotenv>=1.0.0
 
 # ============================================================================
