@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 IMS Weather Forecast Automation - Automated daily weather forecast generator for Israeli cities. Downloads forecast data from Israel Meteorological Service (IMS), processes it, and generates Instagram-ready story images featuring 15 major Israeli cities.
 
-**Current Status:** Phase 4a Complete (SMTP Email Delivery) | Phase 4b In Progress (Workflow Integration)
+**Current Status:** Phase 4b Complete (Workflow Integration) | Phase 4c Planned (GitHub Actions Automation)
 
 ## Essential Commands
 
@@ -354,11 +354,11 @@ The project follows an incremental phase system:
 - **Phase 3:** Full design with all 15 cities (COMPLETE)
 - **Phase 3.5:** Weather icon system with full IMS code coverage (COMPLETE)
 - **Phase 4a:** Basic SMTP email delivery (COMPLETE)
-- **Phase 4b:** Workflow integration (IN PROGRESS)
+- **Phase 4b:** Workflow integration (COMPLETE)
 - **Phase 4c:** GitHub Actions automation (PLANNED)
 - **Phase 5:** Production server deployment (FUTURE)
 
-**CURRENT_PHASE** constant in forecast_workflow.py controls which steps execute (currently set to 3, will be updated to 4 in Phase 4b).
+**CURRENT_PHASE** constant in forecast_workflow.py controls which steps execute (currently set to 4 - all phases active).
 
 ### Making Changes to Design
 
@@ -608,14 +608,49 @@ python generate_forecast_image.py  # May fail if cwd is wrong
    python send_email_smtp.py
    ```
 
-### Phase 4b: Workflow Integration (IN PROGRESS 🔄)
+### Phase 4b: Workflow Integration (COMPLETE ✅)
 
-**Next Steps:**
-- Integrate `send_email_smtp.py` into `forecast_workflow.py`
-- Update CURRENT_PHASE from 3 to 4
-- Add email as Step 4 after image generation
-- Test complete workflow: download → extract → generate → email
-- Email failures should be CRITICAL (workflow fails, not silent)
+**Status:** Working perfectly - email delivery integrated into main workflow
+
+**What We Built:**
+- Integrated `send_email_smtp.py` into `forecast_workflow.py` orchestration
+- Updated import from `send_email` (old SendGrid) to `send_email_smtp` (working SMTP)
+- Modified `step_send_email()` to call simplified `send_email()` function
+- Email failures are CRITICAL (workflow fails if email fails - NOT silent)
+- Dry-run mode passes through entire workflow
+
+**Key Changes (forecast_workflow.py):**
+```python
+# Changed import
+from send_email_smtp import send_email  # Was: from send_email import send_forecast_email
+
+# Updated function call
+success = send_email(
+    image_path=image_path,
+    dry_run=dry_run
+)
+# Old signature required: image_path, forecast_date, logger, dry_run
+# New signature is simpler: image_path, dry_run (calculates date internally, uses own logger)
+```
+
+**Testing Results:**
+- ✅ Dry-run mode validated all steps without sending
+- ✅ Complete workflow executed successfully in 3.8 seconds
+- ✅ All 4 phases working: Download → Extract → Generate → Email
+- ✅ Email delivered successfully with forecast image attachment
+- ✅ Security verified: .env not in git status
+
+**Workflow Execution:**
+```bash
+# Test without sending email
+python forecast_workflow.py --dry-run
+
+# Run complete automation
+python forecast_workflow.py
+```
+
+**Phase 4b Achievement:**
+The IMS Weather Forecast Automation now runs end-to-end as a single command, with all phases coordinated through the main workflow script. Email delivery is no longer a separate manual step.
 
 ### Phase 4c: GitHub Actions Automation (PLANNED 📋)
 
