@@ -298,6 +298,65 @@ def select_daily_gradient(date_str: str) -> tuple:
     return gradient
 
 
+def calculate_gradient_color_at_position(y_position: int, gradient_colors: tuple) -> tuple:
+    """
+    Calculate the gradient background color at a specific Y position.
+
+    Args:
+        y_position: Y coordinate in pixels
+        gradient_colors: Tuple of (top_color, bottom_color)
+
+    Returns:
+        RGB tuple of the interpolated color at that position
+    """
+    color_top, color_bottom = gradient_colors
+
+    # Calculate interpolation ratio based on position below header
+    ratio = (y_position - HEADER_HEIGHT) / (IMAGE_HEIGHT - HEADER_HEIGHT)
+    ratio = max(0.0, min(1.0, ratio))  # Clamp between 0 and 1
+
+    r = int(color_top[0] + (color_bottom[0] - color_top[0]) * ratio)
+    g = int(color_top[1] + (color_bottom[1] - color_top[1]) * ratio)
+    b = int(color_top[2] + (color_bottom[2] - color_top[2]) * ratio)
+
+    return (r, g, b)
+
+
+def calculate_separator_color(background_color: tuple) -> tuple:
+    """
+    Calculate an adaptive separator color that contrasts with the background.
+
+    Uses a darkened version of the background color with alpha transparency
+    to ensure visibility across the gradient.
+
+    Args:
+        background_color: RGB tuple of background color at separator position
+
+    Returns:
+        RGBA tuple for separator line color
+    """
+    # Calculate luminance of background color (perceived brightness)
+    r, g, b = background_color
+    luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+
+    # For bright backgrounds, use darker separator with more opacity
+    # For dark backgrounds, use lighter separator
+    if luminance > 0.7:  # Bright background
+        # Darken the background color significantly
+        separator_r = int(r * 0.5)
+        separator_g = int(g * 0.5)
+        separator_b = int(b * 0.5)
+        alpha = 80  # More opaque for better visibility on bright backgrounds
+    else:  # Darker background
+        # Lighten the background color
+        separator_r = min(255, int(r * 1.3 + 50))
+        separator_g = min(255, int(g * 1.3 + 50))
+        separator_b = min(255, int(b * 1.3 + 50))
+        alpha = 60  # Slightly less opaque
+
+    return (separator_r, separator_g, separator_b, alpha)
+
+
 # ============================================================================
 # IMAGE GENERATION FUNCTIONS
 # ============================================================================
@@ -372,7 +431,8 @@ def add_header_content(image: Image.Image, date_str: str) -> None:
 
 def draw_city_row(image: Image.Image, draw: ImageDraw.Draw, city_data: dict,
                   y_position: int, font_city: ImageFont.FreeTypeFont,
-                  font_temp: ImageFont.FreeTypeFont, is_last_row: bool = False) -> None:
+                  font_temp: ImageFont.FreeTypeFont, gradient_colors: tuple,
+                  is_last_row: bool = False) -> None:
     """
     Draw a single city row with Hebrew name, weather icon, and temperature.
 
@@ -385,6 +445,7 @@ def draw_city_row(image: Image.Image, draw: ImageDraw.Draw, city_data: dict,
         y_position: Top Y coordinate of this row
         font_city: Font for city name
         font_temp: Font for temperature
+        gradient_colors: Tuple of (top_color, bottom_color) for adaptive separator
         is_last_row: If True, don't draw separator line below
     """
     # Prepare text content
@@ -441,9 +502,14 @@ def draw_city_row(image: Image.Image, draw: ImageDraw.Draw, city_data: dict,
     # Draw separator line below row (except for last row)
     if not is_last_row:
         separator_y = y_position + ROW_HEIGHT
-        # Draw semi-transparent white line
+
+        # Calculate adaptive separator color based on gradient background
+        bg_color = calculate_gradient_color_at_position(separator_y, gradient_colors)
+        separator_color = calculate_separator_color(bg_color)
+
+        # Draw separator line with adaptive color
         draw.line([(ROW_PADDING, separator_y), (IMAGE_WIDTH - ROW_PADDING, separator_y)],
-                 fill=SEPARATOR_COLOR, width=1)
+                 fill=separator_color, width=1)
 
 
 def generate_all_cities_image(cities_data: list, forecast_date: str, output_path: Path) -> bool:
@@ -502,7 +568,7 @@ def generate_all_cities_image(cities_data: list, forecast_date: str, output_path
 
             print(f"    [{idx+1:2d}/15] {city_data['name_eng']:20s} - {city_data['min_temp']}-{city_data['max_temp']}°C")
 
-            draw_city_row(image, draw, city_data, y_pos, font_city_name, font_temp, is_last)
+            draw_city_row(image, draw, city_data, y_pos, font_city_name, font_temp, gradient_colors, is_last)
 
         # Save image
         print(f"\n  Saving image to: {output_path}")
