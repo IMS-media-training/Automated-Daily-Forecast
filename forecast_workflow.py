@@ -22,7 +22,8 @@ from utils import setup_logging, get_today_date, print_separator, XML_FILE, ARCH
 from download_forecast import download_and_convert
 from extract_forecast import extract_forecast, get_available_dates, parse_xml_file
 from generate_forecast_image import generate_all_cities_image
-from send_email_smtp import send_email
+# Note: send_email_smtp is imported conditionally in step_send_email() to avoid
+# requiring email dependencies in dry-run mode
 
 
 # ============================================================================
@@ -281,7 +282,7 @@ def step_send_email(image_path: str, forecast_date: str, logger, dry_run: bool =
         image_path: Path to generated image
         forecast_date: Forecast date in YYYY-MM-DD format (for logging only - email calculates internally)
         logger: Logger instance (for workflow logging - email has its own logger)
-        dry_run: If True, simulate without sending
+        dry_run: If True, skip email sending entirely (no import needed)
 
     Returns:
         True if successful, False otherwise
@@ -290,12 +291,22 @@ def step_send_email(image_path: str, forecast_date: str, logger, dry_run: bool =
     logger.info("STEP 4: SEND EMAIL (Phase 4 - SMTP)")
     logger.info("=" * 60)
 
+    # Skip email entirely in dry-run mode (don't even import the module)
+    if dry_run:
+        logger.info("DRY RUN: Skipping email delivery")
+        logger.info(f"Would send email with image: {image_path}")
+        return True
+
     try:
+        # Import send_email only when actually needed (not in dry-run)
+        # This avoids requiring email dependencies when just testing gradients
+        from send_email_smtp import send_email
+
         # Note: send_email() uses its own logger and calculates forecast_date internally
         # We only pass image_path and dry_run flag
         success = send_email(
             image_path=image_path,
-            dry_run=dry_run
+            dry_run=False  # Already handled above
         )
 
         if success:
@@ -357,7 +368,7 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None, gradi
     logger.info(f"Target date: {target_date}")
 
     if dry_run:
-        logger.info("DRY RUN MODE: No files will be modified")
+        logger.info("DRY RUN MODE: Images will be generated, email will be skipped")
 
     # Track overall success
     workflow_success = True
@@ -439,7 +450,7 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None, gradi
         logger.error("\nOne or more workflow steps failed - check logs above")
 
     if dry_run:
-        logger.info("\n[DRY RUN] No files were modified")
+        logger.info("\n[DRY RUN] Images generated to output/dry-run/ folder, email skipped")
 
     print_separator(logger, "=", 60)
 
