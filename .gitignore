@@ -22,6 +22,7 @@ ENV/
 
 # Environment variables (contains API keys and secrets)
 .env
+.env.example
 
 # Log files (we keep the logs/ folder structure but not the actual logs)
 logs/*.log
@@ -31,6 +32,7 @@ logs/*.txt
 output/*.jpg
 output/*.png
 output/*.jpeg
+output/dry-run/
 
 # Downloaded/archived XML files (keep structure, not the data files)
 archive/*.xml
@@ -52,6 +54,11 @@ isr_cities_utf8.xml
 
 # Claude Code IDE
 .claude/
+claude sessions/
+
+# Gemini
+.gemini/
+GEMINI.md
 
 # PyCharm
 .idea/
@@ -88,3 +95,12 @@ $RECYCLE.BIN/
 temp/
 tmp/
 test_output/
+
+# ============================================================================
+# Temporary Files
+# ============================================================================
+
+# Internal Dev Documents
+docs/dev-guides/
+CodesForIMSWebSite_1.pdf
+
