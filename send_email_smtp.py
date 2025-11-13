@@ -29,6 +29,7 @@ logger = setup_logging()
 # Paths
 BASE_DIR = Path(__file__).parent.absolute()
 DEFAULT_IMAGE_PATH = BASE_DIR / "output" / "daily_forecast.jpg"
+EMAIL_TEMPLATE_PATH = BASE_DIR / "email_template.html"
 
 
 def validate_environment_variables():
@@ -87,117 +88,24 @@ def validate_environment_variables():
     return env_vars
 
 
-def create_email_html(forecast_date, recipient_name="Weather Forecast Team"):
+def create_email_html(forecast_date):
     """
-    Create HTML email body with Hebrew RTL support.
+    Create HTML email body with Hebrew RTL support by reading from a template file.
 
     Args:
         forecast_date (str): Date in DD/MM/YYYY format (Hebrew convention)
-        recipient_name (str): Name to use in greeting
 
     Returns:
         str: HTML email body
     """
-    html = f"""
-    <!DOCTYPE html>
-    <html dir="rtl" lang="he">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body {{
-                font-family: Arial, Helvetica, sans-serif;
-                direction: rtl;
-                text-align: right;
-                background-color: #f5f5f5;
-                margin: 0;
-                padding: 0;
-            }}
-            .container {{
-                max-width: 600px;
-                margin: 20px auto;
-                background-color: #ffffff;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                overflow: hidden;
-            }}
-            .header {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 30px 20px;
-                text-align: center;
-            }}
-            .header h1 {{
-                margin: 0;
-                font-size: 24px;
-                font-weight: 600;
-            }}
-            .content {{
-                padding: 30px 20px;
-                color: #333333;
-                line-height: 1.6;
-            }}
-            .content p {{
-                margin: 10px 0;
-            }}
-            .image-container {{
-                text-align: center;
-                padding: 20px;
-                background-color: #f9f9f9;
-            }}
-            .footer {{
-                background-color: #f5f5f5;
-                padding: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #666666;
-            }}
-            .footer a {{
-                color: #667eea;
-                text-decoration: none;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>תחזית מזג האוויר היומית</h1>
-                <p style="margin: 5px 0 0 0; font-size: 16px;">Daily Weather Forecast</p>
-            </div>
+    if not EMAIL_TEMPLATE_PATH.exists():
+        raise FileNotFoundError(f"Email template file not found: {EMAIL_TEMPLATE_PATH}")
 
-            <div class="content">
-                <p>שלום {recipient_name},</p>
+    with open(EMAIL_TEMPLATE_PATH, "r", encoding="utf-8") as f:
+        html_template = f.read()
 
-                <p>מצורפת תחזית מזג האוויר ליום <strong>{forecast_date}</strong> עבור 15 הערים המרכזיות בישראל.</p>
-
-                <p>התחזית כוללת:</p>
-                <ul>
-                    <li>טמפרטורות מקסימום ומינימום</li>
-                    <li>תיאור מזג האוויר (אייקונים)</li>
-                    <li>ערים ממוינות מצפון לדרום</li>
-                </ul>
-
-                <p>התמונה מוכנה לפרסום ב-Instagram Stories (1080x1920 פיקסלים).</p>
-            </div>
-
-            <div class="image-container">
-                <p style="margin-bottom: 10px; color: #666;"><strong>תחזית יומית - Daily Forecast</strong></p>
-                <p style="font-size: 12px; color: #999; margin-top: 5px;">
-                    התמונה מצורפת לאימייל / Image attached to email
-                </p>
-            </div>
-
-            <div class="footer">
-                <p>מערכת אוטומטית לתחזית מזג אוויר - השירות המטאורולוגי הישראלי</p>
-                <p>IMS Weather Forecast Automation System</p>
-                <p style="margin-top: 10px;">
-                    <a href="https://ims.gov.il">ims.gov.il</a>
-                </p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    # Use .replace() to insert dynamic content (avoids conflicts with CSS braces)
+    html = html_template.replace("{forecast_date}", forecast_date)
     return html
 
 

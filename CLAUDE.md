@@ -370,12 +370,23 @@ The project follows an incremental phase system:
 
 ### Making Changes to Design
 
+**Image Design:**
+
 All image design parameters are in constants at the top of `generate_forecast_image.py`:
 - Modify values in CONFIGURATION section
 - No need to search through code for magic numbers
 - Run `python generate_forecast_image.py` to test changes
 - Output saved to `output/daily_forecast.jpg`
 - For single-city testing, use `python exploration/generate_image.py`
+
+**Email Design:**
+
+Email appearance is controlled by `email_template.html`:
+- Edit HTML/CSS directly in template file
+- No Python code changes needed for design updates
+- Test with `python send_email_smtp.py --dry-run`
+- Template features: IMS gradient colors, Noto Sans Hebrew font, logo row
+- Dynamic content: `{forecast_date}` placeholder auto-replaced at runtime
 
 ### Adding New Scripts
 
@@ -544,7 +555,8 @@ python generate_forecast_image.py  # May fail if cwd is wrong
 - Professional email formatting with forecast image attachment
 
 **Key Files:**
-- `send_email_smtp.py` - Complete SMTP email delivery (424 lines)
+- `send_email_smtp.py` - Complete SMTP email delivery script
+- `email_template.html` - Professional HTML email template (external file)
 - `.env.example` - Environment variable template
 - `.env` - Local credentials (in .gitignore, never committed)
 
@@ -615,6 +627,44 @@ python generate_forecast_image.py  # May fail if cwd is wrong
    # Send real test email
    python send_email_smtp.py
    ```
+
+**Email Template System:**
+
+The email HTML is now separated into an external template file for easier customization:
+
+- **Template file:** `email_template.html` (project root)
+- **Template loading:** `send_email_smtp.py` reads and injects dynamic content
+- **Dynamic content:** `{forecast_date}` placeholder replaced at runtime
+
+**Template Features:**
+- **Professional IMS branding:** Orange-to-blue gradient header matching IMS colors
+- **Hebrew typography:** Noto Sans Hebrew font via Google Fonts CDN
+- **RTL support:** Full Hebrew right-to-left layout with proper text alignment
+- **Responsive design:** Mobile-friendly with max-width constraints
+- **Logo row:** IMS logo and GitHub link displayed in tidy footer row
+- **Transparency:** Link to IMS XML source for data transparency
+- **Accessibility:** Semantic HTML with proper ARIA labels
+
+**Customizing Email Design:**
+
+To modify the email appearance, edit `email_template.html` directly:
+```html
+<!-- Header gradient (line 28) -->
+background: linear-gradient(135deg, #ffa602 0%, #0090f7 100%);
+
+<!-- Font family (line 12) -->
+font-family: "Noto Sans Hebrew", Arial, sans-serif;
+
+<!-- Logo row styling (lines 64-79) -->
+.footer .logo-row {
+    gap: 40px;  /* spacing between logos */
+}
+```
+
+**Template Placeholder:**
+- `{forecast_date}` - Replaced with DD/MM/YYYY format date at runtime
+
+**Important:** The template uses `.replace()` for placeholder injection (not `.format()`) to avoid conflicts with CSS braces.
 
 ### Phase 4b: Workflow Integration (COMPLETE ✅)
 
@@ -722,3 +772,4 @@ The IMS Weather Forecast Automation now runs end-to-end as a single command, wit
 - IT team handoff and training documentation
 - Production monitoring and alerting setup
 - Backup and disaster recovery procedures
+- before you commit, make sure all the docs are up to date. If they are not, update them and include them in the commit too

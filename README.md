@@ -47,7 +47,9 @@ This project automates the creation of daily weather forecast images for the Isr
 ### Phase 4: Automation & Email Delivery ✅ COMPLETE
 - ✅ SMTP integration for professional email delivery
 - ✅ Automated daily execution via GitHub Actions (6:00 AM Israel time)
-- ✅ HTML email template with embedded forecast image
+- ✅ External HTML email template with IMS branding
+- ✅ Professional design: Orange-to-blue gradient, Noto Sans Hebrew font
+- ✅ Easy template customization without code changes
 - ✅ Manual trigger support for testing
 - ✅ Artifact storage (images & logs) for 90 days
 - ✅ Environment variable configuration for secure credentials
@@ -175,6 +177,7 @@ Automated-Daily-Forecast/
 ├── extract_forecast.py       # Data extraction
 ├── generate_forecast_image.py # Image generation
 ├── send_email_smtp.py        # Email delivery (SMTP)
+├── email_template.html       # Professional email template
 ├── utils.py                  # Shared utilities
 ├── archive/                  # Historical XML (14 days)
 ├── assets/                   # Logos, weather icons, and fonts
@@ -325,4 +328,4 @@ For deployment questions, consult IMS IT Department.
 
 ---
 
-**Last Updated:** November 10, 2025
+**Last Updated:** November 13, 2025

@@ -5,6 +5,26 @@ All notable changes to the IMS Weather Forecast Automation project will be docum
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2025-11-13
+
+### Added
+- **External Email Template:** Created `email_template.html` as a separate file for easier email design customization
+- **IMS Professional Branding:** Updated email template with orange-to-blue gradient header matching IMS brand colors
+- **Noto Sans Hebrew Font:** Enhanced email typography with professional Hebrew font via Google Fonts CDN
+- **Logo Row:** Added footer with IMS and GitHub logos displayed in clean, tidy row
+- **Data Transparency:** Included direct link to IMS XML source in email body
+
+### Changed
+- **Email Template Architecture:** Refactored `send_email_smtp.py` to load HTML from external file instead of inline string
+- **Simplified Function:** Reduced `create_email_html()` from ~110 lines to ~18 lines
+- **Template Injection:** Uses `.replace()` method instead of `.format()` to avoid CSS brace conflicts
+- **Content Updates:** Changed greeting to "בוקר טוב מצוות ניו מדיה" (New Media team)
+
+### Improved
+- **Maintainability:** Email design changes no longer require Python code modifications
+- **Version Control:** HTML template can be reviewed and versioned independently
+- **Documentation:** Updated CLAUDE.md and README.md with email template system details
+
 ## [4.1.0] - 2025-11-10
 
 ### Added

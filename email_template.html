@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <title>Automated-Daily-Forecast</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@300;400;700&display=swap&subset=hebrew" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Noto Sans Hebrew", Arial, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ffa602 0%, #0090f7 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+        .image-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* New styles for tidy logos */
+        .footer .logo-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px; /* nice gap between logos */
+            margin-top: 40px;
+        }
+        .footer .logo-row a {
+            display: inline-block;
+            line-height: 0; /* remove inline-gap below images */
+        }
+        .footer .logo-row img {
+            width: 40px;   /* consistent size for all logos */
+            height: auto;
+            display: block;
+        }
+
+        /* Small-screen tweak to stack logos if needed */
+        @media (max-width: 360px) {
+            .footer .logo-row {
+                gap: 8px;
+            }
+            .footer .logo-row img {
+                width: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>תחזית מזג האוויר היומית</h1>
+            <p style="margin: 5px 0 0 0; font-size: 16px;">Daily Weather Forecast</p>
+        </div>
+
+        <div class="content">
+            <p>בוקר טוב מצוות ניו מדיה.</p>
+
+            <p>מצורפת תחזית מזג האוויר ליום <strong>{forecast_date}</strong> עבור 15 ערים בישראל.</p>
+
+            <p>
+                התחזית נוצרה באופן אוטומטי על בסיס קובץ הXML מהאתר של השירות המטאורולוגי הישראלי.
+                (<a href="https://ims.gov.il/sites/default/files/ims_data/xml_files/isr_cities.xml">קישור לקובץ ה-XML</a>).
+            </p>
+
+            <p>התחזית כוללת:</p>
+            <ul>
+                <li>טמפרטורות מקסימום ומינימום</li>
+                <li>תיאור מזג האוויר (אייקונים)</li>
+                <li>ערים ממוינות מצפון לדרום</li>
+            </ul>
+
+            <p>התמונה מוכנה לפרסום בסטורי באינסטגרם, או לשיתוף בווטסאפ (1080x1920 פיקסלים).</p>
+        </div>
+
+        <div class="image-container">
+            <p style="margin-bottom: 10px; color: #666;"><strong>תחזית יומית - Daily Forecast</strong></p>
+            <p style="font-size: 12px; color: #999; margin-top: 5px;">
+                התמונה מצורפת לאימייל / Image attached to email
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>מערכת אוטומטית לתחזית מזג אוויר - השירות המטאורולוגי הישראלי</p>
+            <p>IMS Weather Forecast Automation System</p>
+            <p>התמונה נוצרה באופן אוטומטי באמצעות סקריפט פייתון. <a href="https://github.com/noamweisss/Automated-Daily-Forecast" target="_blank" rel="noopener noreferrer">לעמוד הפרויקט בגיטהאב</a></p>
+
+            <div class="logo-row" role="group" aria-label="partner and project logos">
+                <a href="https://ims.gov.il" title="IMS">
+                    <img src="IMS_Logo.svg" alt="IMS Logo">
+                </a>
+
+                <a href="https://github.com/noamweisss/Automated-Daily-Forecast" title="GitHub - Automated Daily Forecast">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktZ2l0aHViIiB2aWV3Qm94PSIwIDAgMTYgMTYiPgogIDxwYXRoIGQ9Ik04IDBDMy41OCAwIDAgMy41OCAwIDhjMCAzLjU0IDIuMjkgNi41MyA1LjQ3IDcuNTkuNC4wNy41NS0uMTcuNTUtLjM4IDAtLjE5LS4wMS0uODItLjAxLTEuNDktMi4wMS4zNy0yLjUzLS40OS0yLjY5LS45NC0uMDktLjIzLS40OC0uOTQtLjgyLTEuMTMtLjI4LS4xNS0uNjgtLjUyLS4wMS0uNTMuNjMtLjAxIDEuMDguNTggMS4yMy44Mi43MiAxLjIxIDEuODcuODcgMi4zMy42Ni4wNy0uNTIuMjgtLjg3LjUxLTEuMDctMS43OC0uMi0zLjY0LS44OS0zLjY0LTMuOTUgMC0uODcuMzEtMS41OS44Mi0yLjE1LS4wOC0uMi0uMzYtMS4wMi4wOC0yLjEyIDAgMCAuNjctLjIxIDIuMi44Mi42NC0uMTggMS4zMi0uMjcgMi0uMjcuNjggMCAxLjM2LjA5IDIgLjI3IDEuNTMtMS4wNCAyLjItLjgyIDIyLS44MmMuNDQgMS4xLjE2IDEuOTIuMDggMi4xMi41MS41Ni44MiAxLjI3LjgyIDIuMTUgMCAzLjA3LTEuODcgMy43NS0zLjY1IDMuOTUuMjkuMjUuNTQuNzMuNTQgMS40OCAwIDEuMDctLjAxIDEuOTMtLjAxIDIuMiAwIC4yMS4xNS40Ni41NS4zOEE4LjAxIDEuMDEgMCAwIDAgMTYgOGMwLTQuNDItMy41OC04LTgtOHoiLz4KPC9zdmc+" alt="GitHub">
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
