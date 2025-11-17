@@ -149,7 +149,8 @@ pip install -r requirements.txt
 - Built-in smtplib for simple, reliable email delivery
 - HTML email template with Hebrew RTL support
 - Image attachment with MIME encoding
-- Environment variable configuration via .env file (EMAIL_ADDRESS, EMAIL_PASSWORD, RECIPIENT_EMAIL, SMTP_SERVER, SMTP_PORT)
+- Environment variable configuration via .env file (EMAIL_ADDRESS, EMAIL_PASSWORD, SMTP_SERVER, SMTP_PORT)
+- Multiple recipients support via recipients.txt file (one email per line)
 - Dry-run mode for testing without sending
 - Environment validation with clear error messages
 - Gmail App Password support (16-character passwords)
@@ -559,6 +560,8 @@ python generate_forecast_image.py  # May fail if cwd is wrong
 - `email_template.html` - Professional HTML email template (external file)
 - `.env.example` - Environment variable template
 - `.env` - Local credentials (in .gitignore, never committed)
+- `recipients.txt.example` - Recipients list template
+- `recipients.txt` - Actual recipient emails (in .gitignore, never committed)
 
 **Testing Results:**
 - ✅ Dry-run mode validated configuration
@@ -577,7 +580,8 @@ python generate_forecast_image.py  # May fail if cwd is wrong
 
 2. **Consistent variable naming everywhere:**
    - Same names in: `.env.example`, code, documentation
-   - Used: `EMAIL_ADDRESS`, `EMAIL_PASSWORD`, `RECIPIENT_EMAIL`
+   - Used: `EMAIL_ADDRESS`, `EMAIL_PASSWORD` for .env variables
+   - Recipients configured in separate `recipients.txt` file (supports multiple recipients)
    - NOT: `SENDER_EMAIL`, `FROM_EMAIL`, `TO_EMAIL` (v1 had mismatches)
 
 3. **Simple approach first:**
@@ -593,8 +597,9 @@ python generate_forecast_image.py  # May fail if cwd is wrong
 
 5. **Security from day 1:**
    - `.env` in `.gitignore` before creating any credentials
+   - `recipients.txt` in `.gitignore` to protect recipient privacy
    - Temporary Gmail account for testing (zero personal risk)
-   - No credentials ever in code or git history
+   - No credentials or personal emails ever in code or git history
 
 **Setup Instructions:**
 
@@ -610,16 +615,30 @@ python generate_forecast_image.py  # May fail if cwd is wrong
    SMTP_PORT=587
    EMAIL_ADDRESS=your-gmail@gmail.com
    EMAIL_PASSWORD=your-16-char-app-password
-   RECIPIENT_EMAIL=recipient@example.com
    ```
 
-3. **Generate Gmail App Password:**
+3. **Configure recipients:**
+   ```bash
+   # Copy the template
+   cp recipients.txt.example recipients.txt
+   # Edit recipients.txt and add email addresses (one per line)
+   ```
+
+   Example `recipients.txt` content:
+   ```
+   user1@example.com
+   user2@gmail.com
+   # Lines starting with # are comments
+   team-member@company.com
+   ```
+
+4. **Generate Gmail App Password:**
    - Enable 2-Step Verification on Google account
    - Go to: https://myaccount.google.com/apppasswords
    - Generate 16-character App Password
    - Use App Password (NOT regular Gmail password)
 
-4. **Test email delivery:**
+5. **Test email delivery:**
    ```bash
    # Test configuration without sending
    python send_email_smtp.py --dry-run
@@ -739,7 +758,8 @@ The IMS Weather Forecast Automation now runs end-to-end as a single command, wit
    - Validate early with clear error messages
 
 4. **Security mindset:**
-   - .gitignore protection BEFORE creating credentials
+   - .gitignore protection BEFORE creating credentials or recipient lists
+   - Protected both `.env` and `recipients.txt` from git
    - Used temporary Gmail (no personal risk if leaked)
    - Verified `git status` before every commit
 

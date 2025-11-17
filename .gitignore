@@ -22,7 +22,9 @@ ENV/
 
 # Environment variables (contains API keys and secrets)
 .env
-.env.example
+
+# Recipients list (contains actual email addresses)
+recipients.txt
 
 # Log files (we keep the logs/ folder structure but not the actual logs)
 logs/*.log

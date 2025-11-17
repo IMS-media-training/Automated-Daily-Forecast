@@ -1,0 +1,13 @@
+# Email Recipients Configuration
+# Add one email address per line
+# Lines starting with # are ignored (comments)
+# Empty lines are ignored
+
+# Example recipients:
+# user1@example.com
+# user2@gmail.com
+# weather-team@company.com
+
+# Add your actual recipient emails below:
+recipient1@example.com
+recipient2@example.com

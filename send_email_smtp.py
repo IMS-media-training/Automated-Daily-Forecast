@@ -30,6 +30,7 @@ logger = setup_logging()
 BASE_DIR = Path(__file__).parent.absolute()
 DEFAULT_IMAGE_PATH = BASE_DIR / "output" / "daily_forecast.jpg"
 EMAIL_TEMPLATE_PATH = BASE_DIR / "email_template.html"
+RECIPIENTS_FILE_PATH = BASE_DIR / "recipients.txt"
 
 
 def validate_environment_variables():
@@ -48,7 +49,6 @@ def validate_environment_variables():
     required_vars = {
         'EMAIL_ADDRESS': 'Sender email address (Gmail account)',
         'EMAIL_PASSWORD': 'Gmail App Password (16 characters)',
-        'RECIPIENT_EMAIL': 'Recipient email address',
         'SMTP_SERVER': 'SMTP server address (e.g., smtp.gmail.com)',
         'SMTP_PORT': 'SMTP port (e.g., 587 for TLS)',
     }
@@ -86,6 +86,72 @@ def validate_environment_variables():
         raise ValueError(f"SMTP_PORT must be a number, got: {env_vars['SMTP_PORT']}")
 
     return env_vars
+
+
+def read_recipients():
+    """
+    Read email recipients from recipients.txt file.
+
+    Format:
+        - One email address per line
+        - Lines starting with # are comments (ignored)
+        - Empty lines are ignored
+
+    Returns:
+        list: List of recipient email addresses
+
+    Raises:
+        FileNotFoundError: If recipients.txt doesn't exist
+        ValueError: If no valid recipients found
+    """
+    if not RECIPIENTS_FILE_PATH.exists():
+        error_msg = (
+            "\n" + "="*70 + "\n"
+            "ERROR: Recipients file not found\n"
+            "="*70 + "\n\n"
+            f"Expected file: {RECIPIENTS_FILE_PATH}\n\n"
+            "To fix this:\n"
+            "1. Copy recipients.txt.example to recipients.txt\n"
+            "2. Edit recipients.txt and add email addresses (one per line)\n"
+            "3. Lines starting with # are comments\n"
+            "4. Empty lines are ignored\n\n"
+            "Example:\n"
+            "  user1@example.com\n"
+            "  user2@gmail.com\n"
+            "  # This is a comment\n"
+            "="*70
+        )
+        raise FileNotFoundError(error_msg)
+
+    recipients = []
+    with open(RECIPIENTS_FILE_PATH, 'r', encoding='utf-8') as f:
+        for line_num, line in enumerate(f, 1):
+            line = line.strip()
+
+            # Skip comments and empty lines
+            if not line or line.startswith('#'):
+                continue
+
+            # Basic email validation (contains @ symbol)
+            if '@' not in line:
+                logger.warning(f"Line {line_num}: Invalid email format (missing @): {line}")
+                continue
+
+            recipients.append(line)
+
+    if not recipients:
+        error_msg = (
+            "\n" + "="*70 + "\n"
+            "ERROR: No valid recipients found\n"
+            "="*70 + "\n\n"
+            f"File: {RECIPIENTS_FILE_PATH}\n\n"
+            "The recipients.txt file exists but contains no valid email addresses.\n"
+            "Add at least one email address (one per line).\n"
+            "="*70
+        )
+        raise ValueError(error_msg)
+
+    return recipients
 
 
 def create_email_html(forecast_date):
@@ -127,14 +193,19 @@ def send_email(image_path=None, dry_run=False):
 
         sender_email = env_vars['EMAIL_ADDRESS']
         sender_password = env_vars['EMAIL_PASSWORD']
-        recipient_email = env_vars['RECIPIENT_EMAIL']
         smtp_server = env_vars['SMTP_SERVER']
         smtp_port = env_vars['SMTP_PORT']
+
+        # Read recipients from recipients.txt
+        logger.info("Reading recipients from recipients.txt...")
+        recipients = read_recipients()
 
         logger.info(f"SMTP Configuration:")
         logger.info(f"  Server: {smtp_server}:{smtp_port}")
         logger.info(f"  From: {sender_email}")
-        logger.info(f"  To: {recipient_email}")
+        logger.info(f"  To: {len(recipients)} recipient(s)")
+        for recipient in recipients:
+            logger.info(f"      - {recipient}")
 
         # Use default image path if not specified
         if image_path is None:
@@ -157,7 +228,7 @@ def send_email(image_path=None, dry_run=False):
         logger.info("Creating email message...")
         msg = MIMEMultipart('related')
         msg['From'] = sender_email
-        msg['To'] = recipient_email
+        msg['To'] = ', '.join(recipients)  # Multiple recipients separated by commas
         msg['Subject'] = f"תחזית מזג אוויר יומית - {forecast_date} | Daily Weather Forecast"
 
         # Create HTML body
@@ -204,7 +275,9 @@ def send_email(image_path=None, dry_run=False):
         logger.info("✓ Email sent successfully!")
         logger.info("="*70)
         logger.info(f"From: {sender_email}")
-        logger.info(f"To: {recipient_email}")
+        logger.info(f"To: {len(recipients)} recipient(s)")
+        for recipient in recipients:
+            logger.info(f"    - {recipient}")
         logger.info(f"Subject: {msg['Subject']}")
         logger.info(f"Attachment: {image_path.name}")
         logger.info("="*70)
@@ -266,9 +339,13 @@ Examples:
 Environment Variables Required (create .env file):
   EMAIL_ADDRESS      - Sender Gmail address
   EMAIL_PASSWORD     - Gmail App Password (16 chars)
-  RECIPIENT_EMAIL    - Recipient email address
   SMTP_SERVER        - SMTP server (smtp.gmail.com for Gmail)
   SMTP_PORT          - SMTP port (587 for TLS)
+
+Recipients Configuration (create recipients.txt file):
+  One email address per line
+  Lines starting with # are comments
+  Empty lines are ignored
 
 Security Notes:
   - .env file is in .gitignore and never committed
