@@ -81,6 +81,30 @@ Cities use manual x,y positions from Figma design (not calculated from lat/long)
 - [ ] Update extraction to include weather description
 - [ ] Test complete data pipeline
 
+## Git Workflow
+
+### Multiple Remotes
+This project has TWO remote repositories that must stay in sync:
+- `origin` - Personal GitHub (portfolio): github.com/noamweisss/Automated-Daily-Forecast
+- `ims-production` - IMS GitHub (production): github.com/IMS-media-training/Automated-Daily-Forecast
+
+IMPORTANT: Always push to BOTH remotes after commits:
+```bash
+git push origin main && git push ims-production main
+```
+
+### Pre-Commit Documentation Checklist
+IMPORTANT: Before EVERY commit, check and update these docs if affected:
+- [ ] CLAUDE.md - Update if commands, structure, or critical notes changed
+- [ ] README.md - Update if features, setup, or architecture changed
+- [ ] CHANGELOG.md - Add entry to [Unreleased] section
+- [ ] docs/SETUP.md - Update if installation or configuration changed
+- [ ] docs/ARCHITECTURE.md - Update if data flow or components changed
+- [ ] docs/DEVELOPMENT.md - Update if dev practices changed
+- [ ] docs/DEPLOYMENT.md - Update if GitHub Actions or deployment changed
+
+Use `/pre-commit` command to get this checklist before committing.
+
 ## Version
 
 - V2 Development started: 2025-11-24

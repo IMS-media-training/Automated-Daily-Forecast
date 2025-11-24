@@ -55,7 +55,8 @@ isr_cities_utf8.xml
 *.code-workspace
 
 # Claude Code IDE
-.claude/
+.claude/*
+!.claude/commands/
 claude sessions/
 
 # Gemini
