@@ -23,15 +23,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `requirements.txt`: Added pyluach>=2.2.0 dependency
 - Archive cleanup now handles both `isr_cities_*.xml` and `isr_country_*.xml` files
 
+### Added (V2 Milestone 2)
+- City coordinate mapping for V2 map-based layout (`city_coordinates.py`)
+- Weather icon mapping for emoji-based icons V2 (`weather_icon_mapping.py`)
+- Noto Sans Hebrew variable font (primary for V2)
+- Israel map PNG & SVG assets (assets/map/)
+- Ministry of Transport logo (PNG & SVG)
+- V2 asset path constants in `utils.py` (MAP_DIR, LOGOS_DIR, WEATHER_ICONS_V2_DIR, etc.)
+- Font constants: NOTO_SANS_HEBREW_FONT, OPEN_SANS_FONT
+
+### Changed (V2 Milestone 2)
+- Reorganized asset structure: created map/, logos/ subdirectories
+- Renamed `weather_icons 2.0/` to `weather_icons_v2/` (no spaces)
+- Renamed weather icon files from emoji codes to descriptive names (e.g., `clear.png`, `partly_cloudy.png`)
+- Consolidated logo files in `assets/logos/` (removed duplicates)
+
+### Removed (V2 Milestone 2)
+- Fredoka-Variable.ttf font (unused)
+- Duplicate logo files (IMS_logo.png, ims_logo_placeholder.png)
+- Legacy weather icons moved to `archive/v1/weather_icons`
+
 ### V2 Roadmap (Planned)
-- Map-based geographic layout with Israel silhouette (Milestone 2-3)
-- Noto Sans Hebrew variable font (Milestone 2)
-- New weather icon set (weather_icons 2.0) (Milestone 2)
+- Map-based geographic layout with Israel silhouette (Milestone 3)
 - Dual logos: IMS + Ministry of Transport (Milestone 4)
 - City-specific layouts (RTL/TTB/LTR) based on map position (Milestone 3)
-
-### Removed
-- Vertical list layout (preserved in archive/v1/)
+- Gradient background (cyan → magenta) (Milestone 3)
+- Textual weather description panel (Milestone 4)
 
 ---
 

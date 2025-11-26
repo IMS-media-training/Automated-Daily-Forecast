@@ -12,12 +12,19 @@
 
 ```
 ├── Core scripts (project root)
-├── assets/           # Images, fonts, icons
-├── docs/             # Documentation
-├── exploration/      # Test and development scripts
-├── output/           # Generated images
-├── logs/             # Application logs
-└── archive/v1/       # Archived v1 code
+│   ├── forecast_workflow.py, download_forecast.py, extract_forecast.py
+│   ├── generate_forecast_map.py, send_email_smtp.py, utils.py
+│   ├── city_coordinates.py, weather_icon_mapping.py (V2)
+├── assets/
+│   ├── map/                      # Israel map assets
+│   ├── logos/                    # IMS & MoT logos
+│   └── weather_icons_v2/         # V2 weather icons
+├── fonts/                        # Noto Sans Hebrew + Open Sans
+├── docs/                         # Documentation
+├── exploration/                  # Test and development scripts
+├── output/                       # Generated images
+├── logs/                         # Application logs
+└── archive/v1/                   # Archived V1 code & assets
 ```
 
 ## Code Style

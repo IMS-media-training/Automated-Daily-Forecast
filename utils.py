@@ -30,6 +30,23 @@ OUTPUT_DIR = PROJECT_ROOT / "output"
 XML_FILE = PROJECT_ROOT / "isr_cities_utf8.xml"
 COUNTRY_XML_FILE = PROJECT_ROOT / "isr_country_utf8.xml"
 
+# V2 Asset Paths
+ASSETS_DIR = PROJECT_ROOT / "assets"
+MAP_DIR = ASSETS_DIR / "map"
+LOGOS_DIR = ASSETS_DIR / "logos"
+WEATHER_ICONS_V2_DIR = ASSETS_DIR / "weather_icons_v2"
+
+# Specific asset files
+ISRAEL_MAP_PNG = MAP_DIR / "israel_map.png"
+ISRAEL_MAP_SVG = MAP_DIR / "israel_map.svg"
+IMS_LOGO_PNG = LOGOS_DIR / "ims_logo.png"
+MOT_LOGO_PNG = LOGOS_DIR / "mot_logo.png"
+
+# Font paths
+FONTS_DIR = PROJECT_ROOT / "fonts"
+NOTO_SANS_HEBREW_FONT = FONTS_DIR / "NotoSansHebrew-Variable.ttf"  # Primary for V2
+OPEN_SANS_FONT = FONTS_DIR / "OpenSans-Variable.ttf"              # Backup
+
 ARCHIVE_RETENTION_DAYS = 14
 EXPECTED_CITY_COUNT = 15
 

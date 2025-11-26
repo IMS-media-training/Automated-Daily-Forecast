@@ -31,16 +31,22 @@ cat logs/forecast_automation.log
 ## Project Structure
 
 ```
-├── forecast_workflow.py      # Main orchestration
-├── download_forecast.py      # Download cities & country XML
-├── extract_forecast.py       # Data extraction with Hebrew dates
-├── generate_forecast_map.py  # V2 map-based generator (TODO)
-├── send_email_smtp.py        # Email delivery
-├── utils.py                  # Shared utilities + Hebrew calendar
+├── forecast_workflow.py          # Main orchestration
+├── download_forecast.py          # Download cities & country XML
+├── extract_forecast.py           # Data extraction with Hebrew dates
+├── generate_forecast_map.py      # V2 map-based generator (TODO)
+├── send_email_smtp.py            # Email delivery
+├── utils.py                      # Shared utilities + Hebrew calendar
+├── city_coordinates.py           # City positions for map layout (V2)
+├── weather_icon_mapping.py       # Icon mapping for V2
 ├── assets/
-│   ├── weather_icons 2.0/    # New icon set
-│   └── map/                  # Israel map PNG (TODO)
-└── archive/v1/               # Archived v1 code
+│   ├── map/                      # Israel map PNG & SVG
+│   ├── logos/                    # IMS & MoT logos (PNG/SVG)
+│   └── weather_icons_v2/         # V2 emoji-style icon set (renamed)
+├── fonts/
+│   ├── NotoSansHebrew-Variable.ttf  # Primary font for V2
+│   └── OpenSans-Variable.ttf        # Backup font
+└── archive/v1/                   # Archived V1 code & assets
 ```
 
 ## Code Style
@@ -84,6 +90,26 @@ Cities use manual x,y positions from Figma design (not calculated from lat/long)
 }
 ```
 
+### City Coordinates (city_coordinates.py)
+V2 uses manual positioning from Figma design:
+- 15 cities with x, y coordinates on 1080x1920 canvas
+- Layout types: RTL (coastal), TTB (inland), LTR (eastern)
+- Import: `from city_coordinates import CITY_POSITIONS`
+
+### Weather Icon Mapping (weather_icon_mapping.py)
+Maps IMS weather codes to V2 icon filenames:
+- Primary codes: 1250 (Clear), 1220 (Partly Cloudy)
+- Extended codes for seasonal variations
+- Import: `from weather_icon_mapping import get_weather_icon_path`
+
+### V2 Asset Paths (utils.py)
+New constants for V2 assets:
+- `ISRAEL_MAP_PNG`, `ISRAEL_MAP_SVG` - Map files
+- `IMS_LOGO_PNG`, `MOT_LOGO_PNG` - Logo files
+- `WEATHER_ICONS_V2_DIR` - Icon directory
+- `NOTO_SANS_HEBREW_FONT` - Primary font
+- `OPEN_SANS_FONT` - Backup font
+
 ## Data Sources
 
 - Cities forecast: `https://ims.gov.il/.../isr_cities.xml`
@@ -97,10 +123,19 @@ Cities use manual x,y positions from Figma design (not calculated from lat/long)
 - [x] Update extraction to include weather description
 - [x] Test complete data pipeline
 
-**Next: Milestone 2 - Asset Preparation**
-- Export Israel map from Figma
-- Download Noto Sans Hebrew variable font
-- Organize new assets structure
+**Milestone 2: Asset Preparation** ✓ COMPLETE
+- [x] Export Israel map from Figma (PNG & SVG)
+- [x] Download Noto Sans Hebrew variable font
+- [x] Organize new assets structure (map/, logos/, weather_icons_v2/)
+- [x] Create city coordinate mapping (15 cities)
+- [x] Create weather icon mapping
+- [x] Archive legacy V1 assets
+
+**Next: Milestone 3 - Map-Based Image Generator**
+- Implement generate_forecast_map.py
+- Create gradient background (cyan → magenta)
+- Position cities at geographic coordinates
+- Render adaptive city layouts (RTL/TTB/LTR)
 
 ## Git Workflow
 

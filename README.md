@@ -69,15 +69,21 @@ For technical details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ```
 Automated-Daily-Forecast/
-├── forecast_workflow.py      # Main orchestration
-├── download_forecast.py      # XML download & encoding
-├── extract_forecast.py       # Data extraction
-├── generate_forecast_map.py  # Map-based image generation
-├── send_email_smtp.py        # Email delivery (SMTP)
-├── utils.py                  # Shared utilities
-├── assets/                   # Icons, fonts, map images
-├── docs/                     # Documentation
-├── output/                   # Generated images
+├── forecast_workflow.py          # Main orchestration
+├── download_forecast.py          # XML download & encoding
+├── extract_forecast.py           # Data extraction + Hebrew dates
+├── generate_forecast_map.py      # Map-based image generation (V2)
+├── send_email_smtp.py            # Email delivery (SMTP)
+├── utils.py                      # Shared utilities + V2 asset paths
+├── city_coordinates.py           # City positioning for V2 map
+├── weather_icon_mapping.py       # Weather icon mapping for V2
+├── assets/
+│   ├── map/                      # Israel map PNG & SVG
+│   ├── logos/                    # IMS & Ministry of Transport logos
+│   └── weather_icons_v2/         # V2 emoji-style weather icons
+├── fonts/                        # Noto Sans Hebrew + Open Sans
+├── docs/                         # Documentation
+├── output/                       # Generated images
 └── archive/v1/               # Archived v1 code
 ```
 

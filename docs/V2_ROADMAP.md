@@ -80,7 +80,7 @@ Different component layouts based on map position:
 ---
 
 ### Milestone 2: Asset Preparation
-**Status:** Not Started
+**Status:** ✅ COMPLETE (2025-11-26)
 
 **Objectives:**
 - Export Israel map from Figma (PNG with effects)
@@ -88,11 +88,30 @@ Different component layouts based on map position:
 - Define city coordinate mapping from Figma
 - Organize new assets structure
 
-**Assets to Prepare:**
-- [ ] Israel map PNG (with inner shadow, drop shadow, texture baked in)
-- [ ] Noto Sans Hebrew variable font
-- [ ] City coordinates dictionary (15 cities with x, y, layout type)
-- [ ] Ministry of Transport logo
+**Assets Prepared:**
+- [x] Israel map PNG & SVG (assets/map/)
+- [x] Noto Sans Hebrew variable font (fonts/)
+- [x] City coordinates dictionary (city_coordinates.py - 15 cities with x, y, layout type)
+- [x] Ministry of Transport logo (assets/logos/)
+- [x] Weather icon mapping (weather_icon_mapping.py)
+- [x] Reorganized asset structure (map/, logos/, weather_icons_v2/)
+- [x] Archived legacy V1 assets
+
+**Deliverables:**
+- New files: `city_coordinates.py`, `weather_icon_mapping.py`
+- Updated: `utils.py` with V2 asset paths and font constants
+- Asset structure:
+  - `assets/map/` - Israel map PNG & SVG
+  - `assets/logos/` - IMS & MoT logos consolidated
+  - `assets/weather_icons_v2/` - Renamed with descriptive filenames
+- Fonts: Noto Sans Hebrew (primary), Open Sans (backup)
+- Legacy assets archived to `archive/v1/weather_icons`
+
+**Implementation Notes:**
+- Weather icons renamed from emoji codes (e.g., `sun_2600-fe0f.png` → `clear.png`)
+- Icon mapping validated against actual XML data (codes 1250, 1220 are primary)
+- Fredoka font removed (unused)
+- City coordinates use manual x,y from Figma (not calculated from lat/long)
 
 **City Coordinates (from Figma):**
 ```python

@@ -63,7 +63,7 @@ Generates map-based Instagram story image with geographic city positioning.
 Sends forecast image via SMTP with HTML template.
 
 ### utils.py
-Shared utilities: logging, date handling, file management, validation, Hebrew calendar.
+Shared utilities: logging, date handling, file management, validation, Hebrew calendar, V2 asset paths.
 
 **Key Functions:**
 - `setup_logging()` - Configures console and file logging
@@ -75,22 +75,52 @@ Shared utilities: logging, date handling, file management, validation, Hebrew ca
 - Uses pyluach library for conversion
 - Output: "DD/MM/YYYY ו׳ בכסלו תשפ״ו" (Gregorian + Hebrew)
 
+**V2 Asset Paths:**
+- MAP_DIR, ISRAEL_MAP_PNG, ISRAEL_MAP_SVG - Map assets
+- LOGOS_DIR, IMS_LOGO_PNG, MOT_LOGO_PNG - Logo assets
+- WEATHER_ICONS_V2_DIR - Icon directory
+- NOTO_SANS_HEBREW_FONT, OPEN_SANS_FONT - Font paths
+
+### city_coordinates.py (V2)
+City positioning data for map-based layout.
+
+**Data:**
+- CITY_POSITIONS: Dict mapping 15 cities to x,y coordinates and layout types
+- Coordinates manually defined from Figma design (1080x1920 canvas)
+- Layout types: RTL (coastal), TTB (inland), LTR (eastern)
+
+### weather_icon_mapping.py (V2)
+Weather icon mapping for V2 emoji-style icons.
+
+**Data:**
+- WEATHER_CODE_TO_ICON_V2: Maps IMS weather codes to icon filenames
+- Primary codes: 1250 (Clear), 1220 (Partly Cloudy)
+- 16 total codes mapped
+
+**Functions:**
+- `get_weather_icon_path(weather_code)` - Returns Path to icon file
+
 ## File Structure
 
 ```
-├── forecast_workflow.py      # Orchestration
-├── download_forecast.py      # Data download
-├── extract_forecast.py       # Data extraction
-├── generate_forecast_map.py  # Image generation (V2)
-├── send_email_smtp.py        # Email delivery
-├── utils.py                  # Utilities
+├── forecast_workflow.py          # Orchestration
+├── download_forecast.py          # Data download
+├── extract_forecast.py           # Data extraction
+├── generate_forecast_map.py      # Image generation (V2)
+├── send_email_smtp.py            # Email delivery
+├── utils.py                      # Utilities + V2 asset paths
+├── city_coordinates.py           # V2 city positioning data
+├── weather_icon_mapping.py       # V2 icon mapping
 ├── assets/
-│   ├── weather_icons 2.0/    # Weather icons
-│   ├── map/                  # Israel map image
-│   └── fonts/                # Noto Sans Hebrew
-├── output/                   # Generated images
-├── logs/                     # Application logs
-└── archive/                  # Historical data
+│   ├── map/                      # Israel map PNG & SVG
+│   ├── logos/                    # IMS & MoT logos
+│   └── weather_icons_v2/         # V2 emoji-style icons
+├── fonts/
+│   ├── NotoSansHebrew-Variable.ttf  # Primary font
+│   └── OpenSans-Variable.ttf        # Backup font
+├── output/                       # Generated images
+├── logs/                         # Application logs
+└── archive/                      # Historical data + V1 assets
 ```
 
 ## Image Generation (V2)
