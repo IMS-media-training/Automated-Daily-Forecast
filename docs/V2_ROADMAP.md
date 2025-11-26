@@ -51,7 +51,7 @@ Different component layouts based on map position:
 ## Milestones
 
 ### Milestone 1: Data Pipeline Update
-**Status:** Not Started
+**Status:** ✅ COMPLETE (2025-11-26)
 
 **Objectives:**
 - Download and parse `isr_country.xml` for textual forecast
@@ -65,10 +65,17 @@ Different component layouts based on map position:
 - Same encoding handling as cities XML (ISO-8859-8 → UTF-8)
 
 **Deliverables:**
-- [ ] `download_country_forecast.py` or update to existing download script
-- [ ] Hebrew calendar utility in `utils.py`
-- [ ] Updated `extract_forecast.py` with description field
-- [ ] Tested data pipeline
+- [x] Updated `download_forecast.py` to download both cities and country XML
+- [x] Hebrew calendar utility `format_hebrew_date()` in `utils.py`
+- [x] Updated `extract_forecast.py` with weather description extraction
+- [x] Added pyluach>=2.2.0 to requirements.txt
+- [x] Tested complete data pipeline successfully
+
+**Implementation Details:**
+- `download_forecast.py`: Downloads both XMLs, converts encoding, archives both
+- `utils.py`: Added `format_hebrew_date()`, country XML helpers, COUNTRY_XML_FILE constant
+- `extract_forecast.py`: New `extract_weather_description()` function, returns dict with cities/description/dates
+- Archive cleanup now handles both cities and country XML files
 
 ---
 

@@ -18,6 +18,9 @@ Pillow>=10.0.0
 # Hebrew RTL (right-to-left) text support for Pillow
 python-bidi>=0.4.2
 
+# Hebrew calendar conversion for date display
+pyluach>=2.2.0
+
 # ============================================================================
 # Phase 4: Email Delivery (SMTP)
 # ============================================================================

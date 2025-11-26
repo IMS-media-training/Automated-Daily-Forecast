@@ -11,6 +11,13 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import glob
 
+try:
+    from pyluach import dates, hebrewcal
+except ImportError:
+    # pyluach may not be installed yet
+    dates = None
+    hebrewcal = None
+
 
 # ============================================================================
 # CONFIGURATION
@@ -21,6 +28,7 @@ LOGS_DIR = PROJECT_ROOT / "logs"
 ARCHIVE_DIR = PROJECT_ROOT / "archive"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 XML_FILE = PROJECT_ROOT / "isr_cities_utf8.xml"
+COUNTRY_XML_FILE = PROJECT_ROOT / "isr_country_utf8.xml"
 
 ARCHIVE_RETENTION_DAYS = 14
 EXPECTED_CITY_COUNT = 15
@@ -89,6 +97,63 @@ def get_today_date() -> str:
     return datetime.now().strftime('%Y-%m-%d')
 
 
+def format_hebrew_date(date_str: Optional[str] = None) -> str:
+    """
+    Convert Gregorian date to Hebrew calendar date with full formatting.
+
+    Args:
+        date_str: Date in YYYY-MM-DD format (default: today)
+
+    Returns:
+        Formatted date string: "DD/MM/YYYY Hebrew_Date"
+        Example: "26/11/2025 ו׳ בכסלו תשפ״ו"
+    """
+    if dates is None:
+        # Fallback if pyluach not installed
+        if date_str is None:
+            date_str = get_today_date()
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        return date_obj.strftime('%d/%m/%Y')
+
+    try:
+        # Parse the date
+        if date_str is None:
+            date_str = get_today_date()
+
+        # Convert string to datetime
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+
+        # Format Gregorian part (DD/MM/YYYY)
+        gregorian_part = date_obj.strftime('%d/%m/%Y')
+
+        # Convert Gregorian to Hebrew calendar
+        gregorian_date = dates.GregorianDate(date_obj.year, date_obj.month, date_obj.day)
+        hebrew_date = gregorian_date.to_heb()
+
+        # Get Hebrew date string and split into components
+        # Format from pyluach: "ו׳ כסלו תשפ״ו"
+        hebrew_date_parts = hebrew_date.hebrew_date_string().split()
+
+        if len(hebrew_date_parts) == 3:
+            # Add ב before the month name: "ו׳ בכסלו תשפ״ו"
+            hebrew_day = hebrew_date_parts[0]
+            hebrew_month = hebrew_date_parts[1]
+            hebrew_year = hebrew_date_parts[2]
+            hebrew_part = f'{hebrew_day} ב{hebrew_month} {hebrew_year}'
+        else:
+            # Fallback if format is unexpected
+            hebrew_part = hebrew_date.hebrew_date_string()
+
+        return f'{gregorian_part} {hebrew_part}'
+
+    except Exception as e:
+        # Fallback to Gregorian only if conversion fails
+        if date_str is None:
+            date_str = get_today_date()
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        return date_obj.strftime('%d/%m/%Y')
+
+
 def get_archive_filename(date_str: Optional[str] = None) -> str:
     """
     Generate archive filename for a given date.
@@ -117,6 +182,34 @@ def get_archive_path(date_str: Optional[str] = None) -> Path:
     return ARCHIVE_DIR / get_archive_filename(date_str)
 
 
+def get_country_archive_filename(date_str: Optional[str] = None) -> str:
+    """
+    Generate archive filename for country XML for a given date.
+
+    Args:
+        date_str: Date in YYYY-MM-DD format (default: today)
+
+    Returns:
+        Filename like 'isr_country_2025-10-15.xml'
+    """
+    if date_str is None:
+        date_str = get_today_date()
+    return f'isr_country_{date_str}.xml'
+
+
+def get_country_archive_path(date_str: Optional[str] = None) -> Path:
+    """
+    Get full path to country archive file for a given date.
+
+    Args:
+        date_str: Date in YYYY-MM-DD format (default: today)
+
+    Returns:
+        Full path to country archive file
+    """
+    return ARCHIVE_DIR / get_country_archive_filename(date_str)
+
+
 # ============================================================================
 # FILE MANAGEMENT
 # ============================================================================
@@ -133,6 +226,7 @@ def ensure_directories() -> None:
 def cleanup_old_archives(logger: logging.Logger, dry_run: bool = False) -> int:
     """
     Delete XML files in archive older than ARCHIVE_RETENTION_DAYS.
+    Handles both cities and country XML files.
 
     Args:
         logger: Logger instance for output
@@ -143,16 +237,17 @@ def cleanup_old_archives(logger: logging.Logger, dry_run: bool = False) -> int:
     """
     cutoff_date = datetime.now() - timedelta(days=ARCHIVE_RETENTION_DAYS)
 
-    # Find all XML files in archive
+    # Find all XML files in archive (both cities and country)
     archive_files = glob.glob(str(ARCHIVE_DIR / 'isr_cities_*.xml'))
+    archive_files.extend(glob.glob(str(ARCHIVE_DIR / 'isr_country_*.xml')))
     deleted_count = 0
 
     for file_path in archive_files:
         # Extract date from filename
         filename = os.path.basename(file_path)
         try:
-            # Format: isr_cities_YYYY-MM-DD.xml
-            date_str = filename.replace('isr_cities_', '').replace('.xml', '')
+            # Format: isr_cities_YYYY-MM-DD.xml or isr_country_YYYY-MM-DD.xml
+            date_str = filename.replace('isr_cities_', '').replace('isr_country_', '').replace('.xml', '')
             file_date = datetime.strptime(date_str, '%Y-%m-%d')
 
             # Check if older than cutoff

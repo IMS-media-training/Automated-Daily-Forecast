@@ -7,20 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Map-based geographic layout with Israel silhouette
-- Textual weather description from IMS country forecast
-- Hebrew calendar dates alongside Gregorian (using pyluach)
-- Noto Sans Hebrew variable font
-- New weather icon set (weather_icons 2.0)
-- Dual logos: IMS + Ministry of Transport
-- City-specific layouts (RTL/TTB/LTR) based on map position
+### Added (V2 Milestone 1)
+- Download and parse `isr_country.xml` for textual weather descriptions
+- Hebrew calendar conversion using pyluach library (v2.2.0+)
+- `format_hebrew_date()` utility function for Gregorian + Hebrew date formatting
+- `extract_weather_description()` function to parse country XML
+- Country XML archive management (matching cities XML pattern)
+- Support for both cities and country XML in cleanup operations
+- New return format from `extract_forecast()`: dictionary with cities, description, date, and hebrew_date
 
-### Changed
-- Complete visual redesign from vertical list to geographic map
-- Background: gradient overlaid with map vs. simple gradient
-- Font: Open Sans → Noto Sans Hebrew
-- Documentation: lean CLAUDE.md + detailed docs/ structure
+### Changed (V2 Milestone 1)
+- `download_forecast.py`: Now downloads both cities and country XML files
+- `extract_forecast.py`: Returns complete forecast data structure instead of just city list
+- `utils.py`: Added country-specific helper functions and Hebrew date formatting
+- `requirements.txt`: Added pyluach>=2.2.0 dependency
+- Archive cleanup now handles both `isr_cities_*.xml` and `isr_country_*.xml` files
+
+### V2 Roadmap (Planned)
+- Map-based geographic layout with Israel silhouette (Milestone 2-3)
+- Noto Sans Hebrew variable font (Milestone 2)
+- New weather icon set (weather_icons 2.0) (Milestone 2)
+- Dual logos: IMS + Ministry of Transport (Milestone 4)
+- City-specific layouts (RTL/TTB/LTR) based on map position (Milestone 3)
 
 ### Removed
 - Vertical list layout (preserved in archive/v1/)

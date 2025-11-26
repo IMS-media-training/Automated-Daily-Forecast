@@ -15,11 +15,14 @@ from utils import (
     setup_logging,
     get_today_date,
     get_archive_path,
+    get_country_archive_path,
     validate_city_count,
     validate_city_data,
     format_temperature_range,
+    format_hebrew_date,
     print_separator,
     XML_FILE,
+    COUNTRY_XML_FILE,
     ARCHIVE_DIR
 )
 
@@ -305,6 +308,55 @@ def sort_cities_north_to_south(cities_data: List[Dict], logger) -> List[Dict]:
         return cities_data
 
 
+def extract_weather_description(country_xml_path: Path, target_date: str, logger) -> Optional[str]:
+    """
+    Extract textual weather description from country XML.
+
+    Args:
+        country_xml_path: Path to country XML file
+        target_date: Target date in YYYY-MM-DD format
+        logger: Logger instance
+
+    Returns:
+        Weather description string in Hebrew, or None if not found
+    """
+    try:
+        # Parse the country XML
+        root = parse_xml_file(country_xml_path, logger)
+        if root is None:
+            return None
+
+        # Find the forecast for target date
+        # Country XML structure: Location/LocationData/TimeUnitData with Date and PredictedConditions
+        location_data = root.find('.//LocationData')
+        if location_data is None:
+            logger.warning("LocationData not found in country XML")
+            return None
+
+        # Search for the target date
+        for time_unit in location_data.findall('TimeUnitData'):
+            date_elem = time_unit.find('Date')
+            if date_elem is not None and date_elem.text == target_date:
+                # Found the right date, extract the description in Hebrew
+                # Look for Element with ElementName = "Weather in Hebrew"
+                for element in time_unit.findall('Element'):
+                    elem_name = element.find('ElementName')
+                    elem_value = element.find('ElementValue')
+
+                    if (elem_name is not None and elem_name.text == 'Weather in Hebrew' and
+                        elem_value is not None and elem_value.text):
+                        description = elem_value.text.strip()
+                        logger.info(f"Found weather description for {target_date}")
+                        return description
+
+        logger.warning(f"No weather description found for {target_date} in country XML")
+        return None
+
+    except Exception as e:
+        logger.error(f"Error extracting weather description: {e}")
+        return None
+
+
 def find_latest_archive(logger) -> Optional[Path]:
     """
     Find the most recent XML file in the archive directory.
@@ -332,13 +384,40 @@ def find_latest_archive(logger) -> Optional[Path]:
         return None
 
 
+def find_latest_country_archive(logger) -> Optional[Path]:
+    """
+    Find the most recent country XML file in the archive directory.
+
+    Args:
+        logger: Logger instance
+
+    Returns:
+        Path to latest country archive file, or None if not found
+    """
+    try:
+        archive_files = glob.glob(str(ARCHIVE_DIR / 'isr_country_*.xml'))
+
+        if not archive_files:
+            logger.warning("No country archive files found")
+            return None
+
+        # Sort by filename (date is in filename)
+        latest_file = max(archive_files)
+        logger.info(f"Found latest country archive: {Path(latest_file).name}")
+        return Path(latest_file)
+
+    except Exception as e:
+        logger.error(f"Error finding latest country archive: {e}")
+        return None
+
+
 # ============================================================================
 # MAIN EXTRACTION WORKFLOW
 # ============================================================================
 
 def extract_forecast(target_date: Optional[str] = None,
                     use_archive_fallback: bool = True,
-                    logger=None) -> Optional[List[Dict]]:
+                    logger=None) -> Optional[Dict]:
     """
     Complete extraction workflow: parse XML, extract data, sort, validate.
 
@@ -348,7 +427,12 @@ def extract_forecast(target_date: Optional[str] = None,
         logger: Logger instance
 
     Returns:
-        List of city data dictionaries, or None if failed
+        Dictionary containing:
+            - 'cities': List of city data dictionaries
+            - 'description': Weather description string (Hebrew)
+            - 'date': Target date used (YYYY-MM-DD)
+            - 'hebrew_date': Formatted date with Hebrew calendar
+        Returns None if failed
     """
     if logger is None:
         logger = setup_logging()
@@ -402,12 +486,36 @@ def extract_forecast(target_date: Optional[str] = None,
     logger.info("\nSorting cities north to south...")
     cities_data = sort_cities_north_to_south(cities_data, logger)
 
+    # Extract weather description from country XML
+    logger.info("\nExtracting weather description from country XML...")
+    country_xml_path = COUNTRY_XML_FILE
+    weather_description = None
+
+    if country_xml_path.exists():
+        weather_description = extract_weather_description(country_xml_path, target_date, logger)
+    elif use_archive_fallback:
+        logger.warning("Country XML file not found, trying archive fallback...")
+        archive_country_path = find_latest_country_archive(logger)
+        if archive_country_path:
+            weather_description = extract_weather_description(archive_country_path, target_date, logger)
+
+    if weather_description:
+        logger.info(f"Weather description: {weather_description[:50]}..." if len(weather_description) > 50 else f"Weather description: {weather_description}")
+    else:
+        logger.warning("No weather description found (will continue without it)")
+
+    # Format Hebrew date
+    hebrew_date = format_hebrew_date(target_date)
+    logger.info(f"Hebrew date: {hebrew_date}")
+
     # Display summary
     print_separator(logger)
     logger.info("EXTRACTION COMPLETE")
     print_separator(logger)
     logger.info(f"Target date: {target_date}")
+    logger.info(f"Hebrew date: {hebrew_date}")
     logger.info(f"Cities extracted: {len(cities_data)}")
+    logger.info(f"Weather description: {'Found' if weather_description else 'Not found'}")
     logger.info(f"Sorted: North to South")
     logger.info("Note: If smart date detection was used, actual date may differ from target")
 
@@ -422,7 +530,13 @@ def extract_forecast(target_date: Optional[str] = None,
 
     print_separator(logger)
 
-    return cities_data
+    # Return complete forecast data
+    return {
+        'cities': cities_data,
+        'description': weather_description,
+        'date': target_date,
+        'hebrew_date': hebrew_date
+    }
 
 
 # ============================================================================
@@ -460,14 +574,14 @@ def main():
     logger = setup_logging(log_level)
 
     # Run extraction
-    cities_data = extract_forecast(
+    forecast_data = extract_forecast(
         target_date=args.date,
         use_archive_fallback=not args.no_fallback,
         logger=logger
     )
 
     # Exit with appropriate code
-    sys.exit(0 if cities_data is not None else 1)
+    sys.exit(0 if forecast_data is not None else 1)
 
 
 if __name__ == "__main__":

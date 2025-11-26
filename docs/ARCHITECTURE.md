@@ -31,10 +31,30 @@ The IMS Weather Forecast Automation system downloads forecast data from the Isra
 Main orchestration script that coordinates all phases.
 
 ### download_forecast.py
-Downloads XML from IMS with retry logic, encoding conversion, and archive management.
+Downloads both cities and country XML from IMS with retry logic, ISO-8859-8 to UTF-8 conversion, and archive management.
+
+**Key Functions:**
+- `download_xml_from_ims(url, logger)` - Downloads with retry logic
+- `convert_encoding(raw_content, logger)` - ISO-8859-8 → UTF-8
+- `download_and_convert(logger, dry_run)` - Main workflow
 
 ### extract_forecast.py
-Parses XML to extract weather data for 15 cities plus textual description.
+Parses XML files to extract weather data for 15 cities, textual description, and dates.
+
+**Key Functions:**
+- `extract_forecast()` - Returns dict with cities, description, date, hebrew_date
+- `extract_weather_description()` - Parses country XML for Hebrew description
+- `parse_xml_file()` - Handles XML parsing with error handling
+
+**Return Structure:**
+```python
+{
+    'cities': List[Dict],        # 15 cities with forecast data
+    'description': str,          # Hebrew weather description from country XML
+    'date': str,                 # Target date (YYYY-MM-DD)
+    'hebrew_date': str           # Formatted Gregorian + Hebrew date
+}
+```
 
 ### generate_forecast_map.py (V2)
 Generates map-based Instagram story image with geographic city positioning.
@@ -43,7 +63,17 @@ Generates map-based Instagram story image with geographic city positioning.
 Sends forecast image via SMTP with HTML template.
 
 ### utils.py
-Shared utilities: logging, date handling, file management, validation.
+Shared utilities: logging, date handling, file management, validation, Hebrew calendar.
+
+**Key Functions:**
+- `setup_logging()` - Configures console and file logging
+- `format_hebrew_date(date_str)` - Converts Gregorian to Hebrew calendar using pyluach
+- `get_archive_path()` / `get_country_archive_path()` - Archive file management
+- `validate_city_count()` / `validate_city_data()` - Data validation
+
+**Hebrew Calendar:**
+- Uses pyluach library for conversion
+- Output: "DD/MM/YYYY ו׳ בכסלו תשפ״ו" (Gregorian + Hebrew)
 
 ## File Structure
 

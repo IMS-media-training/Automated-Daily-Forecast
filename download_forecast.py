@@ -22,10 +22,12 @@ from utils import (
     setup_logging,
     get_today_date,
     get_archive_path,
+    get_country_archive_path,
     ensure_directories,
     cleanup_old_archives,
     print_separator,
-    XML_FILE
+    XML_FILE,
+    COUNTRY_XML_FILE
 )
 
 
@@ -33,7 +35,8 @@ from utils import (
 # CONFIGURATION
 # ============================================================================
 
-IMS_XML_URL = "https://ims.gov.il/sites/default/files/ims_data/xml_files/isr_cities.xml"
+IMS_CITIES_XML_URL = "https://ims.gov.il/sites/default/files/ims_data/xml_files/isr_cities.xml"
+IMS_COUNTRY_XML_URL = "https://ims.gov.il/sites/default/files/ims_data/xml_files/isr_country.xml"
 DOWNLOAD_TIMEOUT = 30  # seconds
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
@@ -43,22 +46,23 @@ RETRY_DELAY = 2  # seconds
 # DOWNLOAD FUNCTIONS
 # ============================================================================
 
-def download_xml_from_ims(logger, timeout: int = DOWNLOAD_TIMEOUT) -> Optional[bytes]:
+def download_xml_from_ims(url: str, logger, timeout: int = DOWNLOAD_TIMEOUT) -> Optional[bytes]:
     """
     Download XML file from IMS website with retry logic.
 
     Args:
+        url: URL to download from
         logger: Logger instance
         timeout: Request timeout in seconds
 
     Returns:
         Raw XML content as bytes, or None if failed
     """
-    logger.info(f"Downloading XML from: {IMS_XML_URL}")
+    logger.info(f"Downloading XML from: {url}")
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            response = requests.get(IMS_XML_URL, timeout=timeout)
+            response = requests.get(url, timeout=timeout)
             response.raise_for_status()  # Raise exception for bad status codes
 
             logger.info(f"Download successful (attempt {attempt}/{MAX_RETRIES})")
@@ -163,6 +167,7 @@ def save_xml_file(content: str, file_path: Path, logger, dry_run: bool = False) 
 def download_and_convert(logger, dry_run: bool = False) -> bool:
     """
     Complete workflow: download, convert, and save XML files.
+    Downloads both cities and country XML files.
 
     Args:
         logger: Logger instance
@@ -179,56 +184,91 @@ def download_and_convert(logger, dry_run: bool = False) -> bool:
     ensure_directories()
     logger.info("Project directories verified")
 
-    # Step 1: Download XML
-    logger.info("\n[STEP 1/5] Downloading XML from IMS website...")
-    raw_xml = download_xml_from_ims(logger)
-
-    if raw_xml is None:
-        logger.error("Download failed - aborting")
-        return False
-
-    # Step 2: Convert encoding
-    logger.info("\n[STEP 2/5] Converting encoding (ISO-8859-8 → UTF-8)...")
-    utf8_xml = convert_encoding(raw_xml, logger)
-
-    if utf8_xml is None:
-        logger.error("Encoding conversion failed - aborting")
-        return False
-
-    # Step 3: Save current XML file
-    logger.info("\n[STEP 3/5] Saving current XML file...")
-    if not save_xml_file(utf8_xml, XML_FILE, logger, dry_run):
-        logger.error("Failed to save current XML file")
-        return False
-
-    # Step 4: Save to archive
-    logger.info("\n[STEP 4/5] Saving to archive...")
     today = get_today_date()
-    archive_path = get_archive_path(today)
+    success_count = 0
 
-    if not save_xml_file(utf8_xml, archive_path, logger, dry_run):
-        logger.warning("Failed to save archive copy (continuing anyway)")
+    # ========================================================================
+    # CITIES XML
+    # ========================================================================
+    logger.info("\n[CITIES 1/4] Downloading cities XML from IMS website...")
+    raw_cities_xml = download_xml_from_ims(IMS_CITIES_XML_URL, logger)
 
-    # Step 5: Cleanup old archives
-    logger.info("\n[STEP 5/5] Cleaning up old archive files...")
+    if raw_cities_xml is None:
+        logger.error("Cities XML download failed")
+    else:
+        logger.info("\n[CITIES 2/4] Converting encoding (ISO-8859-8 → UTF-8)...")
+        utf8_cities_xml = convert_encoding(raw_cities_xml, logger)
+
+        if utf8_cities_xml is None:
+            logger.error("Cities XML encoding conversion failed")
+        else:
+            logger.info("\n[CITIES 3/4] Saving current cities XML file...")
+            if not save_xml_file(utf8_cities_xml, XML_FILE, logger, dry_run):
+                logger.error("Failed to save current cities XML file")
+            else:
+                logger.info("\n[CITIES 4/4] Saving cities XML to archive...")
+                archive_path = get_archive_path(today)
+                if save_xml_file(utf8_cities_xml, archive_path, logger, dry_run):
+                    success_count += 1
+                else:
+                    logger.warning("Failed to save cities archive copy")
+
+    # ========================================================================
+    # COUNTRY XML
+    # ========================================================================
+    logger.info("\n[COUNTRY 1/4] Downloading country XML from IMS website...")
+    raw_country_xml = download_xml_from_ims(IMS_COUNTRY_XML_URL, logger)
+
+    if raw_country_xml is None:
+        logger.error("Country XML download failed")
+    else:
+        logger.info("\n[COUNTRY 2/4] Converting encoding (ISO-8859-8 → UTF-8)...")
+        utf8_country_xml = convert_encoding(raw_country_xml, logger)
+
+        if utf8_country_xml is None:
+            logger.error("Country XML encoding conversion failed")
+        else:
+            logger.info("\n[COUNTRY 3/4] Saving current country XML file...")
+            if not save_xml_file(utf8_country_xml, COUNTRY_XML_FILE, logger, dry_run):
+                logger.error("Failed to save current country XML file")
+            else:
+                logger.info("\n[COUNTRY 4/4] Saving country XML to archive...")
+                country_archive_path = get_country_archive_path(today)
+                if save_xml_file(utf8_country_xml, country_archive_path, logger, dry_run):
+                    success_count += 1
+                else:
+                    logger.warning("Failed to save country archive copy")
+
+    # ========================================================================
+    # CLEANUP
+    # ========================================================================
+    logger.info("\n[CLEANUP] Cleaning up old archive files...")
     deleted_count = cleanup_old_archives(logger, dry_run)
 
     # Success summary
     print_separator(logger)
-    if dry_run:
-        logger.info("[DRY RUN] Download and conversion simulation complete!")
+    if success_count == 2:
+        if dry_run:
+            logger.info("[DRY RUN] Download and conversion simulation complete!")
+        else:
+            logger.info("Download and conversion complete!")
+        logger.info(f"Current cities XML: {XML_FILE}")
+        logger.info(f"Current country XML: {COUNTRY_XML_FILE}")
+        logger.info(f"Cities archive: {get_archive_path(today)}")
+        logger.info(f"Country archive: {get_country_archive_path(today)}")
+    elif success_count == 1:
+        logger.warning("Partial success: Only 1 of 2 XML files downloaded")
     else:
-        logger.info("Download and conversion complete!")
-
-    logger.info(f"Current XML: {XML_FILE}")
-    logger.info(f"Archive copy: {archive_path}")
+        logger.error("Failed to download any XML files")
+        print_separator(logger)
+        return False
 
     if deleted_count > 0:
         logger.info(f"Cleaned up {deleted_count} old archive file(s)")
 
     print_separator(logger)
 
-    return True
+    return success_count > 0
 
 
 # ============================================================================

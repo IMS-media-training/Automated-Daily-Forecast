@@ -4,7 +4,7 @@
 
 IMS Weather Forecast V2 - Map-based Instagram story generator with geographic city placement. Downloads forecast data from Israel Meteorological Service, generates 1080x1920px images with cities positioned on Israel map.
 
-**Status**: V2 Development (Milestone 1)
+**Status**: V2 Development (Milestone 1 Complete)
 
 ## Essential Commands
 
@@ -32,11 +32,11 @@ cat logs/forecast_automation.log
 
 ```
 ├── forecast_workflow.py      # Main orchestration
-├── download_forecast.py      # Cities XML download
-├── extract_forecast.py       # Data extraction
+├── download_forecast.py      # Download cities & country XML
+├── extract_forecast.py       # Data extraction with Hebrew dates
 ├── generate_forecast_map.py  # V2 map-based generator (TODO)
 ├── send_email_smtp.py        # Email delivery
-├── utils.py                  # Shared utilities
+├── utils.py                  # Shared utilities + Hebrew calendar
 ├── assets/
 │   ├── weather_icons 2.0/    # New icon set
 │   └── map/                  # Israel map PNG (TODO)
@@ -68,6 +68,22 @@ font.set_variation_by_axes([100, 600])  # width=100, weight=600
 ### City Coordinates
 Cities use manual x,y positions from Figma design (not calculated from lat/long).
 
+### Hebrew Calendar
+- Uses pyluach library for Gregorian to Hebrew date conversion
+- Output format: "DD/MM/YYYY Hebrew_Day ב-Month Hebrew_Year"
+- Example: "26/11/2025 ו׳ בכסלו תשפ״ו"
+
+### Data Structure (extract_forecast.py)
+`extract_forecast()` returns a dictionary:
+```python
+{
+    'cities': List[Dict],        # 15 cities with forecast data
+    'description': str,          # Hebrew weather description
+    'date': str,                 # YYYY-MM-DD
+    'hebrew_date': str           # Full formatted date string
+}
+```
+
 ## Data Sources
 
 - Cities forecast: `https://ims.gov.il/.../isr_cities.xml`
@@ -75,11 +91,16 @@ Cities use manual x,y positions from Figma design (not calculated from lat/long)
 
 ## Current Milestone
 
-**Milestone 1: Data Pipeline Update**
-- [ ] Download and parse isr_country.xml
-- [ ] Add Hebrew calendar conversion (pyluach)
-- [ ] Update extraction to include weather description
-- [ ] Test complete data pipeline
+**Milestone 1: Data Pipeline Update** ✓ COMPLETE
+- [x] Download and parse isr_country.xml
+- [x] Add Hebrew calendar conversion (pyluach)
+- [x] Update extraction to include weather description
+- [x] Test complete data pipeline
+
+**Next: Milestone 2 - Asset Preparation**
+- Export Israel map from Figma
+- Download Noto Sans Hebrew variable font
+- Organize new assets structure
 
 ## Git Workflow
 
