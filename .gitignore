@@ -39,6 +39,7 @@ output/dry-run/
 # Downloaded/archived XML files (keep structure, not the data files)
 archive/*.xml
 isr_cities_utf8.xml
+isr_country_utf8.xml
 
 # Keep README files in empty directories
 !logs/README.md
@@ -77,6 +78,7 @@ claude sessions/
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+nul
 
 # macOS
 .DS_Store
