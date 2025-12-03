@@ -57,7 +57,36 @@ Parses XML files to extract weather data for 15 cities, textual description, and
 ```
 
 ### generate_forecast_map.py (V2)
-Generates map-based Instagram story image with geographic city positioning.
+Generates map-based Instagram story image with geographic city positioning using CSS-like gradient system.
+
+**Key Features:**
+- **CSS-style gradients**: Designer-friendly API with angle (degrees) and color stops (position %)
+- **Figma-accurate rendering**: Matches design specifications exactly
+- **Phase-based implementation**: Modular approach for gradual feature completion
+
+**Key Functions:**
+- `create_css_linear_gradient(width, height, angle, color_stops)` - CSS-style gradient with arbitrary angles
+- `interpolate_color_stops(sorted_stops, position)` - Multi-stop color interpolation
+- `initialize_canvas(logger)` - Creates gradient background (RGBA mode)
+- `render_map_overlay(canvas, logger)` - Positions Israel map at Figma coordinates
+- `generate_forecast_map(forecast_data, output_path, logger)` - Main generation function
+
+**Gradient Configuration:**
+```python
+GRADIENT_ANGLE = 346  # CSS convention: 0=top, 90=right, 180=bottom, 270=left
+GRADIENT_STOPS = [
+    ((220, 255, 87), -62.6),    # #DCFF57 at -62.6%
+    ((34, 178, 255), 112.14)    # #22B2FF at 112.14%
+]
+```
+
+**Implementation Status (Milestone 3):**
+- ✅ Phase 1: CSS gradient background
+- ✅ Phase 2: Israel map overlay
+- ⏳ Phase 3: Header with Hebrew date
+- ⏳ Phase 4: City rendering (RTL/TTB/LTR layouts)
+- ⏳ Phase 5: Weather description
+- ⏳ Phase 6: IMS & MoT logos
 
 ### send_email_smtp.py
 Sends forecast image via SMTP with HTML template.

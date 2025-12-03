@@ -43,6 +43,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Duplicate logo files (IMS_logo.png, ims_logo_placeholder.png)
 - Legacy weather icons moved to `archive/v1/weather_icons`
 
+### Added (V2 Milestone 3 - In Progress)
+- `generate_forecast_map.py`: V2 map-based image generator with CSS-like gradient system
+- CSS-style linear gradient function supporting arbitrary angles (0-360°) and multiple color stops
+- Designer-friendly gradient API matching CSS linear-gradient syntax
+- Phase 1: Gradient background implementation (346° angle with negative/positive color stop positions)
+- Phase 2: Israel map overlay with Figma-accurate positioning (533x1495px at 258,288)
+
+### Changed (V2 Milestone 3 - In Progress)
+- Gradient system now uses CSS-style angles instead of simple top-to-bottom
+- Gradient supports color stops at negative and >100% positions for extended gradients
+- Map assets automatically resized to match Figma design specifications
+
 ### V2 Roadmap (Planned)
 - Map-based geographic layout with Israel silhouette (Milestone 3)
 - Dual logos: IMS + Ministry of Transport (Milestone 4)

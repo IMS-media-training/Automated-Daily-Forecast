@@ -71,6 +71,20 @@ IMPORTANT: Axis order is `[width, weight]` for set_variation_by_axes()
 font.set_variation_by_axes([100, 600])  # width=100, weight=600
 ```
 
+### CSS-Like Gradient System (V2)
+IMPORTANT: V2 uses designer-friendly CSS-style gradients with angle and color stops.
+```python
+# Gradient configuration (generate_forecast_map.py)
+GRADIENT_ANGLE = 346  # degrees (0=top, 90=right, 180=bottom, 270=left)
+GRADIENT_STOPS = [
+    ((220, 255, 87), -62.6),    # #DCFF57 at -62.6%
+    ((34, 178, 255), 112.14)    # #22B2FF at 112.14%
+]
+```
+- Supports arbitrary angles matching CSS linear-gradient syntax
+- Color stops can be negative or >100% for extended gradients
+- Easy iteration on design without code changes
+
 ### City Coordinates
 Cities use manual x,y positions from Figma design (not calculated from lat/long).
 
@@ -131,11 +145,20 @@ New constants for V2 assets:
 - [x] Create weather icon mapping
 - [x] Archive legacy V1 assets
 
-**Next: Milestone 3 - Map-Based Image Generator**
-- Implement generate_forecast_map.py
-- Create gradient background (cyan → magenta)
-- Position cities at geographic coordinates
-- Render adaptive city layouts (RTL/TTB/LTR)
+**Milestone 3 - Map-Based Image Generator** (In Progress)
+- [x] Implement generate_forecast_map.py with CSS-like gradient system
+- [x] Create CSS gradient background with angle and color stops (346deg, #DCFF57 → #22B2FF)
+- [x] Load and position Israel map overlay (533x1495px at 258,288)
+- [ ] Render header with Hebrew date and separator line
+- [ ] Implement city rendering with RTL/TTB/LTR layouts
+- [ ] Render all 15 cities with weather icons and temperatures
+- [ ] Render weather description with text wrapping
+- [ ] Render IMS and MoT logos
+
+**Key Features Implemented:**
+- **CSS-like gradient system**: Designer-friendly API with angle (degrees) and color stops (position %)
+- **Figma-accurate positioning**: Map and gradient match Figma design specifications
+- **Phase 1 & 2 complete**: Background gradient and map overlay functional
 
 ## Git Workflow
 
@@ -165,3 +188,5 @@ Use `/pre-commit` command to get this checklist before committing.
 
 - V2 Development started: 2025-11-24
 - V1 archived: See `archive/v1/` or `git checkout v1.0-final`
+- Always check figma context before implementing or updating any visual element.
+the link to the main V2 layout is @https://www.figma.com/design/YVPUc24KCJIFrHpoXKrHz7/Story-Layout-V2.0?node-id=1-2&m=dev
