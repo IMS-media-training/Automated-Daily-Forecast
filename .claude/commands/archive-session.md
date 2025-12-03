@@ -1,6 +1,6 @@
 # Archive Session
 
-Archive the current conversation to a markdown file in `.claude/session_archive/v2/`.
+Archive the current conversation to a markdown file in `C:\Users\noamw\Desktop\ims\Automated Daily Forecast\.claude\session_archive\v2`.
 
 ## Pre-processing
 
@@ -8,7 +8,7 @@ Archive the current conversation to a markdown file in `.claude/session_archive/
 
 ## Instructions
 
-1. **Determine sequence number**: Scan `.claude/session_archive/v2/` for existing files named `claude session #XX.md` and use the next number in sequence.
+1. **Determine sequence number**: Scan `C:\Users\noamw\Desktop\ims\Automated Daily Forecast\.claude\session_archive\v2` for existing files named `claude session #XX.md` and use the next number in sequence.
 
 2. **Generate session name**: Create a concise, descriptive name (3-5 words) based on the main topics discussed.
 
