@@ -1,0 +1,23 @@
+description = "Perform pre-commit documentation check"
+
+[prompt]
+template = """
+Please perform the pre-commit documentation check.
+
+1. Run `git status` and `git diff --stat` to see what has changed.
+2. Review the following checklist and tell me which documentation files need updating based on the changes:
+
+   ### Core Documentation
+   - [ ] **CLAUDE.md** - Update if commands, project structure, or critical notes changed.
+   - [ ] **README.md** - Update if features, setup, or architecture changed.
+   - [ ] **CHANGELOG.md** - ALWAYS add entry to [Unreleased] (Added/Changed/Fixed/Removed).
+
+   ### Detailed Documentation (docs/)
+   - [ ] **docs/SETUP.md** - Update if installation/configuration changed.
+   - [ ] **docs/ARCHITECTURE.md** - Update if data flow/components changed.
+   - [ ] **docs/DEVELOPMENT.md** - Update if dev practices changed.
+   - [ ] **docs/DEPLOYMENT.md** - Update if GitHub Actions/deployment changed.
+
+3. If documentation updates are needed, please list them and ask if I want you to make them.
+4. If no documentation updates are needed, verify that the changes are safe to commit.
+"""

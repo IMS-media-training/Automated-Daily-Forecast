@@ -55,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Font loading system with 4-tier fallback chain (Black Complete → Variable → Black Subset → OpenSans)
 - Separator line with 100px horizontal padding (880px width centered on canvas)
 - Test file naming convention: `{feature}_test_{NN}.png` format for consistent iteration tracking
+- **Gemini Agent Integration**:
+  - `GEMINI.md`: Context file for Gemini agents (matches `CLAUDE.md`)
+  - `.gemini/commands/`: Custom slash commands for Gemini (`pre-commit`, `archive-session`)
+  - `scripts/save_archive.py`: Utility for automated session archiving
 
 ### Changed (V2 Milestone 3 - In Progress)
 - Gradient system now uses CSS-style angles instead of simple top-to-bottom
@@ -62,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Map assets automatically resized to match Figma design specifications
 - Font constants in `utils.py`: Added `NOTO_SANS_HEBREW_BLACK_COMPLETE` for static font with correct weight
 - Font loading prioritizes static fonts over variable fonts to ensure correct weight rendering
+
+### Fixed
+- `forecast_workflow.py`: Updated to use V2 map generator (`generate_forecast_map.py`) instead of archived V1 generator
+
 
 ### V2 Roadmap (Planned)
 - Map-based geographic layout with Israel silhouette (Milestone 3)

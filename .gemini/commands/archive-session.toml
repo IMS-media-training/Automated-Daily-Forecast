@@ -1,0 +1,31 @@
+description = "Archive the current session"
+
+[args]
+name = { description = "Name of the session (3-5 words)", required = true }
+
+[prompt]
+template = """
+Please archive the current session.
+
+1. Generate a summary of our session following this template:
+   
+   # {Session Name}
+
+   ### {Date}
+
+   ---
+
+   ## Summary
+   {Bullet points covering main topics, achievements, and issues}
+
+   ## Next Time
+   {Actionable prompt for the next session}
+
+   ---
+   
+   ## Conversation
+   {Brief summary of what we did, or "Refer to chat history" if full transcript is unavailable}
+
+2. Save this content to a temporary file named `archive_temp.md`.
+3. Run `python scripts/save_archive.py archive_temp.md "{{name}}"` to save it to the official archive.
+"""

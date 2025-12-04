@@ -69,6 +69,7 @@ claude sessions/
 
 # Gemini
 .gemini/
+!.gemini/commands/
 
 # PyCharm
 .idea/
@@ -122,3 +123,5 @@ CodesForIMSWebSite_1.pdf
 # Pip install artifacts
 =*
 
+
+gha-creds-*.json
