@@ -36,6 +36,13 @@ output/*.png
 output/*.jpeg
 output/dry-run/
 
+#generated test output images
+output/test/*.jpg
+output/test/*.png
+output/test/*.jpeg
+
+
+
 # Downloaded/archived XML files (keep structure, not the data files)
 archive/*.xml
 isr_cities_utf8.xml

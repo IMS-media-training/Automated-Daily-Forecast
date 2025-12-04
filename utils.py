@@ -44,7 +44,10 @@ MOT_LOGO_PNG = LOGOS_DIR / "mot_logo.png"
 
 # Font paths
 FONTS_DIR = PROJECT_ROOT / "fonts"
-NOTO_SANS_HEBREW_FONT = FONTS_DIR / "NotoSansHebrew-Variable.ttf"  # Primary for V2
+NOTO_SANS_HEBREW_BLACK_COMPLETE = FONTS_DIR / "NotoSansHebrew-Black-Complete.ttf"  # Static Black weight (complete, all glyphs)
+NOTO_SANS_HEBREW_VARIABLE = FONTS_DIR / "NotoSansHebrew-Variable-Complete.ttf"  # Complete variable font (all glyphs)
+NOTO_SANS_HEBREW_BLACK = FONTS_DIR / "NotoSansHebrew-Black.ttf"     # Static Black subset (Hebrew only, no numbers)
+NOTO_SANS_HEBREW_SEMIBOLD = FONTS_DIR / "NotoSansHebrew-SemiBold.ttf"  # Static SemiBold subset (Hebrew only, no numbers)
 OPEN_SANS_FONT = FONTS_DIR / "OpenSans-Variable.ttf"              # Backup
 
 ARCHIVE_RETENTION_DAYS = 14

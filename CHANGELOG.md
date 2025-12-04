@@ -49,11 +49,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Designer-friendly gradient API matching CSS linear-gradient syntax
 - Phase 1: Gradient background implementation (346° angle with negative/positive color stop positions)
 - Phase 2: Israel map overlay with Figma-accurate positioning (533x1495px at 258,288)
+- Phase 3: Header rendering with Hebrew date and separator line
+- `render_header()` function with RTL text support using bidi library
+- Static Noto Sans Hebrew Black font (complete, all glyphs including numbers)
+- Font loading system with 4-tier fallback chain (Black Complete → Variable → Black Subset → OpenSans)
+- Separator line with 100px horizontal padding (880px width centered on canvas)
+- Test file naming convention: `{feature}_test_{NN}.png` format for consistent iteration tracking
 
 ### Changed (V2 Milestone 3 - In Progress)
 - Gradient system now uses CSS-style angles instead of simple top-to-bottom
 - Gradient supports color stops at negative and >100% positions for extended gradients
 - Map assets automatically resized to match Figma design specifications
+- Font constants in `utils.py`: Added `NOTO_SANS_HEBREW_BLACK_COMPLETE` for static font with correct weight
+- Font loading prioritizes static fonts over variable fonts to ensure correct weight rendering
 
 ### V2 Roadmap (Planned)
 - Map-based geographic layout with Israel silhouette (Milestone 3)

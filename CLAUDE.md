@@ -44,8 +44,10 @@ cat logs/forecast_automation.log
 │   ├── logos/                    # IMS & MoT logos (PNG/SVG)
 │   └── weather_icons_v2/         # V2 emoji-style icon set (renamed)
 ├── fonts/
-│   ├── NotoSansHebrew-Variable.ttf  # Primary font for V2
-│   └── OpenSans-Variable.ttf        # Backup font
+│   ├── NotoSansHebrew-Black-Complete.ttf  # Primary: Static Black (weight 900, all glyphs)
+│   ├── NotoSansHebrew-Variable-Complete.ttf  # Variable font (all glyphs)
+│   ├── NotoSansHebrew-SemiBold.ttf        # Static SemiBold subset (Hebrew only)
+│   └── OpenSans-Variable.ttf              # Backup font
 └── archive/v1/                   # Archived V1 code & assets
 ```
 
@@ -55,6 +57,18 @@ cat logs/forecast_automation.log
 - Use `setup_logging()` from utils.py for logging
 - UTF-8 encoding everywhere
 - Absolute paths preferred over relative
+
+## Test File Naming Convention
+
+When generating test images during development, use consistent incremental naming:
+- Format: `{feature}_test_{NN}.png` where NN is zero-padded number (00, 01, 02, ...)
+- Examples:
+  - `output/header_test_00.png` - First header test
+  - `output/header_test_01.png` - Second header test (with fixes)
+  - `output/cities_test_00.png` - First cities rendering test
+  - `output/full_test_00.png` - Complete image test
+- Purpose: Allows easy comparison between iterations and tracking progress
+- Cleanup: Remove test files before final commit, keep only production outputs
 
 ## Critical Implementation Notes
 
@@ -121,8 +135,17 @@ New constants for V2 assets:
 - `ISRAEL_MAP_PNG`, `ISRAEL_MAP_SVG` - Map files
 - `IMS_LOGO_PNG`, `MOT_LOGO_PNG` - Logo files
 - `WEATHER_ICONS_V2_DIR` - Icon directory
-- `NOTO_SANS_HEBREW_FONT` - Primary font
+- `NOTO_SANS_HEBREW_BLACK_COMPLETE` - Static Black font (complete, all glyphs) **[Priority 1]**
+- `NOTO_SANS_HEBREW_VARIABLE` - Variable font (complete, all glyphs)
+- `NOTO_SANS_HEBREW_BLACK` - Static Black subset (Hebrew only, no numbers)
+- `NOTO_SANS_HEBREW_SEMIBOLD` - Static SemiBold subset (Hebrew only, no numbers)
 - `OPEN_SANS_FONT` - Backup font
+
+**Font Loading Strategy:**
+- **Priority 1:** Static Black Complete (correct weight built-in, all glyphs)
+- **Priority 2:** Variable font (needs weight configuration)
+- **Priority 3:** Black subset (Hebrew only, missing numbers)
+- **Priority 4:** OpenSans fallback
 
 ## Data Sources
 
@@ -149,7 +172,7 @@ New constants for V2 assets:
 - [x] Implement generate_forecast_map.py with CSS-like gradient system
 - [x] Create CSS gradient background with angle and color stops (346deg, #DCFF57 → #22B2FF)
 - [x] Load and position Israel map overlay (533x1495px at 258,288)
-- [ ] Render header with Hebrew date and separator line
+- [x] Render header with Hebrew date and separator line
 - [ ] Implement city rendering with RTL/TTB/LTR layouts
 - [ ] Render all 15 cities with weather icons and temperatures
 - [ ] Render weather description with text wrapping
@@ -158,7 +181,8 @@ New constants for V2 assets:
 **Key Features Implemented:**
 - **CSS-like gradient system**: Designer-friendly API with angle (degrees) and color stops (position %)
 - **Figma-accurate positioning**: Map and gradient match Figma design specifications
-- **Phase 1 & 2 complete**: Background gradient and map overlay functional
+- **Phase 1, 2 & 3 complete**: Background gradient, map overlay, and header rendering functional
+- **Header rendering**: RTL Hebrew text with bidi, Noto Sans Hebrew Black font, centered white separator line (100px padding)
 
 ## Git Workflow
 

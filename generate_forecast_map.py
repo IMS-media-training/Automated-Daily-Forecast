@@ -15,7 +15,7 @@ Version: 2.0
 import argparse
 from pathlib import Path
 from typing import Dict, List, Tuple
-from PIL import Image, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 from utils import (
     setup_logging,
@@ -23,7 +23,11 @@ from utils import (
     ISRAEL_MAP_PNG,
     IMS_LOGO_PNG,
     MOT_LOGO_PNG,
-    NOTO_SANS_HEBREW_FONT,
+    NOTO_SANS_HEBREW_BLACK_COMPLETE,
+    NOTO_SANS_HEBREW_VARIABLE,
+    NOTO_SANS_HEBREW_BLACK,
+    NOTO_SANS_HEBREW_SEMIBOLD,
+    OPEN_SANS_FONT,
     WEATHER_ICONS_V2_DIR,
     ensure_directories
 )
@@ -73,6 +77,24 @@ MAP_HEIGHT = 1495  # Target height from Figma
 # Logos positioning
 LOGOS_X = 633
 LOGOS_Y = 1709
+
+# Phase 3 & 4: Text Styles from Figma
+FONT_SIZE_HEADER = 36
+FONT_WEIGHT_HEADER = 900  # Black
+FONT_WIDTH_HEADER = 100   # Normal width
+
+FONT_SIZE_CITY_NAME = 24
+FONT_WEIGHT_CITY_NAME = 900  # Black
+FONT_WIDTH_CITY_NAME = 100
+
+FONT_SIZE_TEMP = 20
+FONT_WEIGHT_TEMP = 600  # SemiBold
+FONT_WIDTH_TEMP = 100
+
+# Icon and Spacing from Figma
+ICON_DISPLAY_SIZE = 50
+CITY_ICON_TEXT_SPACING = 16
+CITY_NAME_TEMP_SPACING = 4  # Natural text box padding
 
 
 # ============================================================================
@@ -272,8 +294,103 @@ def render_map_overlay(canvas: Image.Image, logger) -> None:
 
 
 def render_header(canvas: Image.Image, hebrew_date: str, logger) -> None:
-    """Phase 3: Render header with Hebrew date and separator line."""
-    pass
+    """
+    Phase 3: Render header with Hebrew date and separator line.
+
+    Args:
+        canvas: PIL Image (RGBA mode) to draw on
+        hebrew_date: Formatted date string (e.g., "04/12/2025 ג׳ בכסלו תשפ״ו")
+        logger: Logger instance
+    """
+    try:
+        logger.info("Rendering header...")
+
+        # Load font - try static Black font first (has correct weight built-in + all glyphs)
+        font = None
+        font_errors = []
+
+        # Priority 1: Try loading Noto Sans Hebrew Black (complete static font with all glyphs)
+        if NOTO_SANS_HEBREW_BLACK_COMPLETE.exists():
+            try:
+                font = ImageFont.truetype(str(NOTO_SANS_HEBREW_BLACK_COMPLETE), FONT_SIZE_HEADER)
+                logger.info("Font loaded: Noto Sans Hebrew Black (complete static, all glyphs)")
+            except OSError as e:
+                font_errors.append(f"Noto Sans Hebrew Black Complete: {e}")
+                font = None
+
+        # Priority 2: Try loading Noto Sans Hebrew Variable font
+        if font is None and NOTO_SANS_HEBREW_VARIABLE.exists():
+            try:
+                font = ImageFont.truetype(str(NOTO_SANS_HEBREW_VARIABLE), FONT_SIZE_HEADER)
+                logger.warning("Font loaded: Noto Sans Hebrew Variable (may have incorrect weight)")
+            except OSError as e:
+                font_errors.append(f"Noto Sans Hebrew Variable: {e}")
+                font = None
+
+        # Priority 3: Try loading Noto Sans Hebrew Black subset (Hebrew only, no numbers)
+        if font is None and NOTO_SANS_HEBREW_BLACK.exists():
+            try:
+                font = ImageFont.truetype(str(NOTO_SANS_HEBREW_BLACK), FONT_SIZE_HEADER)
+                logger.warning("Font loaded: Noto Sans Hebrew Black (static subset - no numbers)")
+            except OSError as e:
+                font_errors.append(f"Noto Sans Hebrew Black: {e}")
+                font = None
+
+        # Priority 4: Fallback to OpenSans
+        if font is None and OPEN_SANS_FONT.exists():
+            try:
+                font = ImageFont.truetype(str(OPEN_SANS_FONT), FONT_SIZE_HEADER)
+                logger.warning("Using OpenSans font as fallback")
+            except OSError as e:
+                font_errors.append(f"OpenSans: {e}")
+
+        # If all fonts failed, skip header rendering
+        if font is None:
+            logger.error(f"Failed to load any font: {', '.join(font_errors)}")
+            logger.warning("Header rendering skipped due to font loading errors")
+            return
+
+        # Process Hebrew text for RTL
+        if BIDI_AVAILABLE:
+            date_display = get_display(hebrew_date)
+        else:
+            logger.warning("bidi library not available, Hebrew may not render correctly")
+            date_display = hebrew_date
+
+        # Create draw instance
+        draw = ImageDraw.Draw(canvas)
+
+        # Calculate text dimensions
+        bbox = draw.textbbox((0, 0), date_display, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # Position text (centered horizontally)
+        text_x = (CANVAS_WIDTH - text_width) // 2
+        text_y = HEADER_Y_START
+
+        # Draw text with white color
+        draw.text((text_x, text_y), date_display, fill=COLOR_WHITE, font=font)
+        logger.info(f"Header date rendered at ({text_x}, {text_y}), size: {text_width}x{text_height}px")
+
+        # Draw separator line with horizontal padding
+        SEPARATOR_HORIZONTAL_PADDING = 100
+        separator_x1 = SEPARATOR_HORIZONTAL_PADDING
+        separator_x2 = CANVAS_WIDTH - SEPARATOR_HORIZONTAL_PADDING
+        separator_y_top = HEADER_SEPARATOR_Y
+        separator_y_bottom = HEADER_SEPARATOR_Y + SEPARATOR_HEIGHT
+
+        draw.rectangle(
+            [(separator_x1, separator_y_top), (separator_x2, separator_y_bottom)],
+            fill=COLOR_WHITE
+        )
+        logger.info(f"Separator line rendered at y={separator_y_top}, x={separator_x1}-{separator_x2}, height={SEPARATOR_HEIGHT}px")
+
+        logger.info("Header rendered successfully")
+
+    except Exception as e:
+        logger.error(f"Error rendering header: {e}", exc_info=True)
+        logger.warning("Continuing with image generation despite header error")
 
 
 def render_cities(canvas: Image.Image, cities: List[Dict], logger) -> None:
@@ -318,8 +435,8 @@ def generate_forecast_map(forecast_data: Dict, output_path: Path, logger) -> boo
         # Phase 2: Map overlay
         render_map_overlay(canvas, logger)
 
-        # Phase 3: Header (TODO)
-        # render_header(canvas, forecast_data['hebrew_date'], logger)
+        # Phase 3: Header
+        render_header(canvas, forecast_data['hebrew_date'], logger)
 
         # Phase 4: Cities (TODO)
         # render_cities(canvas, forecast_data['cities'], logger)
@@ -374,17 +491,20 @@ def main():
     # Ensure directories exist
     ensure_directories()
 
-    # TODO: Load actual forecast data from extract_forecast.py
-    # For now, create minimal test data
+    # Load actual forecast data from extract_forecast.py
+    from extract_forecast import extract_forecast
     from datetime import datetime
-    date_str = args.date if args.date else datetime.now().strftime('%Y-%m-%d')
 
-    test_data = {
-        'date': date_str,
-        'hebrew_date': '03/12/2025 ג׳ בכסלו תשפ״ו',
-        'description': 'מעונן חלקית',
-        'cities': []
-    }
+    date_str = args.date if args.date else None
+
+    logger.info("Extracting forecast data...")
+    forecast_data = extract_forecast(target_date=date_str, logger=logger)
+
+    if forecast_data is None:
+        logger.error("Failed to extract forecast data")
+        exit(1)
+
+    date_str = forecast_data['date']
 
     # Determine output path
     if args.output:
@@ -393,7 +513,7 @@ def main():
         output_path = OUTPUT_DIR / f'forecast_map_{date_str}.png'
 
     # Generate the image
-    success = generate_forecast_map(test_data, output_path, logger)
+    success = generate_forecast_map(forecast_data, output_path, logger)
 
     if success:
         logger.info(f"\n✓ Image generated: {output_path}")
