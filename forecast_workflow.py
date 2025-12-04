@@ -21,7 +21,7 @@ import glob
 from utils import setup_logging, get_today_date, print_separator, XML_FILE, ARCHIVE_DIR
 from download_forecast import download_and_convert
 from extract_forecast import extract_forecast, get_available_dates, parse_xml_file
-from generate_forecast_image import generate_all_cities_image
+from generate_forecast_map import generate_forecast_map
 # Note: send_email_smtp is imported conditionally in step_send_email() to avoid
 # requiring email dependencies in dry-run mode
 
@@ -44,7 +44,7 @@ CURRENT_PHASE = 4
 
 def get_next_dry_run_filename(output_dir: Path) -> Path:
     """
-    Get the next sequential filename for dry-run images (test_000.jpg, test_001.jpg, etc.).
+    Get the next sequential filename for dry-run images (test_000.png, test_001.png, etc.).
 
     Args:
         output_dir: Directory to save dry-run images
@@ -57,7 +57,7 @@ def get_next_dry_run_filename(output_dir: Path) -> Path:
     dry_run_dir.mkdir(parents=True, exist_ok=True)
 
     # Find highest existing test number
-    existing_files = list(dry_run_dir.glob("test_*.jpg"))
+    existing_files = list(dry_run_dir.glob("test_*.png"))
     if not existing_files:
         next_number = 0
     else:
@@ -65,7 +65,7 @@ def get_next_dry_run_filename(output_dir: Path) -> Path:
         numbers = []
         for file in existing_files:
             try:
-                # Extract number from "test_XXX.jpg"
+                # Extract number from "test_XXX.png"
                 num_str = file.stem.split('_')[1]
                 numbers.append(int(num_str))
             except (IndexError, ValueError):
@@ -74,7 +74,7 @@ def get_next_dry_run_filename(output_dir: Path) -> Path:
         next_number = max(numbers) + 1 if numbers else 0
 
     # Format with 3 digits (000, 001, 002, etc.)
-    filename = dry_run_dir / f"test_{next_number:03d}.jpg"
+    filename = dry_run_dir / f"test_{next_number:03d}.png"
     return filename
 
 
@@ -190,7 +190,7 @@ def step_download(logger, dry_run: bool = False) -> bool:
     return success
 
 
-def step_extract(logger, target_date: Optional[str] = None) -> Optional[List[Dict]]:
+def step_extract(logger, target_date: Optional[str] = None) -> Optional[Dict]:
     """
     Step 2: Extract forecast data from XML.
 
@@ -199,33 +199,32 @@ def step_extract(logger, target_date: Optional[str] = None) -> Optional[List[Dic
         target_date: Target date (default: today)
 
     Returns:
-        List of city data dictionaries, or None if failed
+        Dictionary with forecast data (cities, dates, description), or None if failed
     """
     logger.info("\n" + "=" * 60)
     logger.info("STEP 2: EXTRACT FORECAST DATA")
     logger.info("=" * 60)
 
-    cities_data = extract_forecast(
+    forecast_data = extract_forecast(
         target_date=target_date,
         use_archive_fallback=True,
         logger=logger
     )
 
-    if cities_data:
+    if forecast_data:
         logger.info("Extraction step completed successfully")
     else:
         logger.error("Extraction step failed")
 
-    return cities_data
+    return forecast_data
 
 
-def step_generate_image(cities_data: List[Dict], forecast_date: str, logger, dry_run: bool = False) -> tuple[bool, Optional[Path]]:
+def step_generate_image(forecast_data: Dict, logger, dry_run: bool = False) -> tuple[bool, Optional[Path]]:
     """
-    Step 3: Generate Instagram story image (Phase 3 - All 15 Cities).
+    Step 3: Generate Instagram story image (Phase 3 - Map Based).
 
     Args:
-        cities_data: List of city data dictionaries
-        forecast_date: Forecast date in YYYY-MM-DD format
+        forecast_data: Dictionary containing 'cities', 'hebrew_date', etc.
         logger: Logger instance
         dry_run: If True, save to dry-run subfolder with sequential naming
 
@@ -233,7 +232,7 @@ def step_generate_image(cities_data: List[Dict], forecast_date: str, logger, dry
         Tuple of (success: bool, output_path: Path or None)
     """
     logger.info("\n" + "=" * 60)
-    logger.info("STEP 3: GENERATE IMAGE (Phase 3 - All 15 Cities)")
+    logger.info("STEP 3: GENERATE IMAGE (Phase 3 - Map Based)")
     logger.info("=" * 60)
 
     try:
@@ -248,12 +247,12 @@ def step_generate_image(cities_data: List[Dict], forecast_date: str, logger, dry
             logger.info(f"Output path: {output_path}")
         else:
             # Production mode: save to standard location
-            output_path = output_dir / "daily_forecast.jpg"
-            logger.info(f"Generating forecast image for {len(cities_data)} cities")
+            output_path = output_dir / "daily_forecast.png"
+            logger.info(f"Generating forecast image for {len(forecast_data['cities'])} cities")
             logger.info(f"Output path: {output_path}")
 
         # Generate image
-        success = generate_all_cities_image(cities_data, forecast_date, output_path)
+        success = generate_forecast_map(forecast_data, output_path, logger)
 
         if success:
             logger.info("Image generation completed successfully!")
@@ -388,13 +387,13 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None, gradi
     # STEP 2: EXTRACT FORECAST DATA
     # ========================================================================
 
-    cities_data = step_extract(logger, target_date=target_date)
+    forecast_data = step_extract(logger, target_date=target_date)
 
-    if cities_data is None:
+    if forecast_data is None:
         logger.error("Workflow failed: Extraction failed")
         workflow_success = False
     else:
-        logger.info(f"Successfully extracted data for {len(cities_data)} cities")
+        logger.info(f"Successfully extracted data for {len(forecast_data['cities'])} cities")
 
         # ====================================================================
         # STEP 3: GENERATE IMAGE (Phase 3 - All 15 Cities)
@@ -402,7 +401,7 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None, gradi
 
         generated_image_path = None
         if CURRENT_PHASE >= 2:
-            image_success, generated_image_path = step_generate_image(cities_data, target_date, logger, dry_run=dry_run)
+            image_success, generated_image_path = step_generate_image(forecast_data, logger, dry_run=dry_run)
             if not image_success:
                 logger.error("Image generation failed")
                 workflow_success = False
@@ -418,7 +417,7 @@ def run_workflow(dry_run: bool = False, target_date: Optional[str] = None, gradi
             if generated_image_path:
                 email_image_path = generated_image_path
             else:
-                email_image_path = Path(__file__).parent / "output" / "daily_forecast.jpg"
+                email_image_path = Path(__file__).parent / "output" / "daily_forecast.png"
 
             if not step_send_email(str(email_image_path), target_date, logger, dry_run=dry_run):
                 logger.error("Email delivery failed")
