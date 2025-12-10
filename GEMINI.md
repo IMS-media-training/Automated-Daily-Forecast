@@ -14,7 +14,13 @@ This project uses native Gemini CLI slash commands defined in `.gemini/commands/
 
 - **/pre-commit**: Runs the pre-commit documentation checklist.
   - Usage: `/pre-commit`
-  
+
 - **/archive-session**: Archives the current session summary.
   - Usage: `/archive-session name="Session Name"`
   - Logic: Generates a summary, saves to temp file, and runs `scripts/save_archive.py`.
+  - Archives saved to: `.gemini/session_archive/`
+
+## Session Archives
+- **Gemini sessions**: `.gemini/session_archive/gemini session #NN - Name.md`
+- **Claude sessions**: `.claude/session_archive/v2/claude session #NN.md`
+- Both agents have read access to both archives for cross-reference.

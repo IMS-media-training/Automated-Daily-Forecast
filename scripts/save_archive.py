@@ -15,7 +15,7 @@ def get_next_sequence_path(archive_dir: Path, session_name: str) -> Path:
     archive_dir.mkdir(parents=True, exist_ok=True)
     
     # Find highest existing sequence number
-    existing_files = list(archive_dir.glob("claude session #*.md"))
+    existing_files = list(archive_dir.glob("gemini session #*.md"))
     max_seq = -1
     
     for file_path in existing_files:
@@ -34,8 +34,8 @@ def get_next_sequence_path(archive_dir: Path, session_name: str) -> Path:
     
     # Clean session name for filename
     clean_name = "".join(c for c in session_name if c.isalnum() or c in (' ', '-', '_')).strip()
-    filename = f"claude session #{next_seq:02d} - {clean_name}.md"
-    
+    filename = f"gemini session #{next_seq:02d} - {clean_name}.md"
+
     return archive_dir / filename
 
 
@@ -46,10 +46,10 @@ def main():
 
     content_path = Path(sys.argv[1])
     session_name = sys.argv[2]
-    
-    # Use the same archive directory as Claude for consistency
+
+    # Gemini session archive directory
     project_root = Path(__file__).parent.parent
-    archive_dir = project_root / ".claude" / "session_archive" / "v2"
+    archive_dir = project_root / ".gemini" / "session_archive"
 
     if not content_path.exists():
         print(f"Error: Content file not found: {content_path}", file=sys.stderr)

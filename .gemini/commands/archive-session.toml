@@ -27,5 +27,5 @@ Please archive the current session.
    {Brief summary of what we did, or "Refer to chat history" if full transcript is unavailable}
 
 2. Save this content to a temporary file named `archive_temp.md`.
-3. Run `python scripts/save_archive.py archive_temp.md "{{name}}"` to save it to the official archive.
+3. Run `python scripts/save_archive.py archive_temp.md "{{name}}"` to save it to `.gemini/session_archive/`.
 """

@@ -59,6 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `GEMINI.md`: Context file for Gemini agents (matches `CLAUDE.md`)
   - `.gemini/commands/`: Custom slash commands for Gemini (`pre-commit`, `archive-session`)
   - `scripts/save_archive.py`: Utility for automated session archiving
+  - `.gemini/session_archive/`: Separate archive directory for Gemini sessions
+  - Cross-agent archive access: Both agents can read each other's session archives
 
 ### Changed (V2 Milestone 3 - In Progress)
 - Gradient system now uses CSS-style angles instead of simple top-to-bottom
