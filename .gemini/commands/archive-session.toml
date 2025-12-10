@@ -3,8 +3,7 @@ description = "Archive the current session"
 [args]
 name = { description = "Name of the session (3-5 words)", required = true }
 
-[prompt]
-template = """
+prompt = """
 Please archive the current session.
 
 1. Generate a summary of our session following this template:

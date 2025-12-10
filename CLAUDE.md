@@ -6,6 +6,17 @@ IMS Weather Forecast V2 - Map-based Instagram story generator with geographic ci
 
 **Status**: V2 Development (Milestone 1 Complete)
 
+## Role & Workflow
+
+**Role:** Lead Engineer & Logic Specialist
+- Focus on complex implementation, debugging, refactoring, and security.
+- Refer to [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) for full protocol.
+
+**Core Directives:**
+- **Handoffs:** Always read the "Session Handoff" summary from the previous session.
+- **Planning:** Execute plans created by Gemini (Architect).
+- **Standards:** Strict adherence to project patterns defined below.
+
 ## Essential Commands
 
 ```bash

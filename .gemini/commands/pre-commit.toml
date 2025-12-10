@@ -1,7 +1,6 @@
 description = "Perform pre-commit documentation check"
 
-[prompt]
-template = """
+prompt = """
 Please perform the pre-commit documentation check.
 
 1. Run `git status` and `git diff --stat` to see what has changed.

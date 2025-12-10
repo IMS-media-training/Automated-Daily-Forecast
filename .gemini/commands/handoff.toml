@@ -1,0 +1,29 @@
+description = "Generate a standardized session handoff summary"
+
+prompt = """
+Please generate a standard 'Session Handoff' summary for the next agent.
+
+1. Review our current session and identify:
+   - What was the main goal?
+   - What files were modified?
+   - What is the current state (working/broken/pending)?
+   - What specifically should the next agent do?
+
+2. Output the summary in this EXACT format (copy-pasteable):
+
+# Session Handoff: [Topic]
+**Status:** [In Progress / Complete / Blocked]
+**Next Agent:** [Gemini / Claude]
+
+## Context for Next Agent
+- **Goal:** [One sentence goal]
+- **Changes:**
+  - `path/to/file1.py` (Modified logic X)
+  - `path/to/file2.md` (Updated docs)
+- **Current State:** [e.g. "Code compiles, but test X fails"]
+- **Next Steps:**
+  1. [Actionable step 1]
+  2. [Actionable step 2]
+
+3. Ask me if I want to save this to the session archive or just copy it.
+"""
