@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (V2 Milestone 3)
+- Complete map-based image generator with 6 phases (gradient, map, header, cities, description, logos)
+- City rendering system supporting three adaptive layouts: RTL (horizontal), TTB (vertical), LTR (reverse horizontal)
+- Debug mode for visualizing frame boundaries and anchor points (`--debug` flag)
+- Forecast Data frame coordinate system with automatic offset calculations
+- Container padding offset (35px) for accurate icon positioning
+- City name mapping for XML-to-position-key translation
+
+### Changed (V2 Milestone 3)
+- City text color: white → black (#000000) to match Figma design
+- TTB layout spacing: 16px gap → 0px gap (flex-col without gap property)
+- Coordinate system: Now uses Forecast Data frame (128, 248) + container padding (35px) offsets
+- Font priority: Noto Sans Hebrew Black Complete (all glyphs) for temperature display (previously SemiBold subset missing numbers)
+- Spacing constants: Separated horizontal (16px) vs vertical (0px) icon-text gaps
+
+### Fixed (V2 Milestone 3)
+- Temperature numbers rendering blank due to SemiBold font missing Latin digit glyphs
+- Cities positioned incorrectly (too far top-left) due to missing frame offset calculations
+- TTB layout cities having incorrect 16px spacing (should be 0px)
+- Layout assignment logic - all three types (RTL/TTB/LTR) now correctly applied
+
 ### Added (V2 Milestone 1)
 - Download and parse `isr_country.xml` for textual weather descriptions
 - Hebrew calendar conversion using pyluach library (v2.2.0+)

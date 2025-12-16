@@ -62,6 +62,9 @@ GRADIENT_STOPS = [
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 
+# City text color (from Figma: text-black)
+CITY_TEXT_COLOR = COLOR_BLACK
+
 # Header positioning
 HEADER_Y_START = 57
 HEADER_WIDTH = 1080
@@ -73,6 +76,18 @@ MAP_X = 258
 MAP_Y = 288  # Figma shows 288.3, rounded to 288
 MAP_WIDTH = 533  # Target width from Figma
 MAP_HEIGHT = 1495  # Target height from Figma
+
+# Forecast Data frame positioning (from Figma)
+# City coordinates in city_coordinates.py are relative to this frame, not the map
+FORECAST_DATA_FRAME_X = 128
+FORECAST_DATA_FRAME_Y = 248
+FORECAST_DATA_FRAME_WIDTH = 847
+FORECAST_DATA_FRAME_HEIGHT = 1582
+
+# City container padding (from Figma: p-[10px])
+# Figma coordinates are top-left of container, we need icon center
+# Icon center offset = padding (10px) + half icon size (25px) = 35px
+CITY_COORDINATE_OFFSET = 35  # 10px padding + 25px (half of 50px icon)
 
 # Weather Description positioning
 DESCRIPTION_X = 100  # Left padding
@@ -100,7 +115,8 @@ FONT_WIDTH_TEMP = 100
 
 # Icon and Spacing from Figma
 ICON_DISPLAY_SIZE = 50
-CITY_ICON_TEXT_SPACING = 16
+CITY_ICON_TEXT_SPACING_HORIZONTAL = 16  # gap-[16px] for RTL/LTR layouts
+CITY_ICON_TEXT_SPACING_VERTICAL = 0     # NO gap for TTB layout (flex-col without gap)
 CITY_NAME_TEMP_SPACING = 4  # Natural text box padding
 
 # City name mapping: XML names -> CITY_POSITIONS keys
@@ -271,14 +287,9 @@ def initialize_canvas(logger) -> Image.Image:
 # PHASE 2: MAP OVERLAY
 # ============================================================================
 
-def render_map_overlay(canvas: Image.Image, logger) -> None:
+def render_map_overlay(canvas: Image.Image, logger, debug: bool = False) -> None:
     """
     Load and composite Israel map onto canvas.
-    Resizes the map to match Figma dimensions (533x1495px).
-
-    Args:
-        canvas: PIL Image to draw on
-        logger: Logger instance
     """
     try:
         logger.info("Loading Israel map...")
@@ -301,10 +312,28 @@ def render_map_overlay(canvas: Image.Image, logger) -> None:
         logger.info(f"Map resized to: {MAP_WIDTH}x{MAP_HEIGHT}px")
 
         # Composite the map onto the canvas at the specified position
-        # Using the map's alpha channel for proper transparency blending
         canvas.paste(map_img, (MAP_X, MAP_Y), map_img)
-
         logger.info(f"Map positioned at ({MAP_X}, {MAP_Y})")
+
+        # Debug: Draw red outline around map area
+        if debug:
+            draw = ImageDraw.Draw(canvas)
+            draw.rectangle(
+                [MAP_X, MAP_Y, MAP_X + MAP_WIDTH, MAP_Y + MAP_HEIGHT],
+                outline=(255, 0, 0),
+                width=3
+            )
+            logger.info("[DEBUG] Drawn map bounding box")
+
+            # Draw yellow outline around Forecast Data frame
+            draw.rectangle(
+                [FORECAST_DATA_FRAME_X, FORECAST_DATA_FRAME_Y,
+                 FORECAST_DATA_FRAME_X + FORECAST_DATA_FRAME_WIDTH,
+                 FORECAST_DATA_FRAME_Y + FORECAST_DATA_FRAME_HEIGHT],
+                outline=(255, 255, 0),
+                width=2
+            )
+            logger.info("[DEBUG] Drawn Forecast Data frame bounding box")
 
     except Exception as e:
         logger.error(f"Error rendering map overlay: {e}", exc_info=True)
@@ -338,8 +367,8 @@ def render_city_rtl(canvas: Image.Image, draw: ImageDraw.ImageDraw,
     icon_y = y - (ICON_DISPLAY_SIZE // 2)
     canvas.paste(icon, (icon_x, icon_y), icon)
 
-    # Text starts 16px to the right of icon center
-    text_x = x + (ICON_DISPLAY_SIZE // 2) + CITY_ICON_TEXT_SPACING
+    # Text starts 16px to the right of icon center (gap-[16px] from Figma)
+    text_x = x + (ICON_DISPLAY_SIZE // 2) + CITY_ICON_TEXT_SPACING_HORIZONTAL
 
     # Measure text heights for vertical centering
     city_bbox = draw.textbbox((0, 0), city_name, font=font_city)
@@ -356,11 +385,11 @@ def render_city_rtl(canvas: Image.Image, draw: ImageDraw.ImageDraw,
 
     # Draw city name
     city_y = text_block_y
-    draw.text((text_x, city_y), city_name, fill=COLOR_WHITE, font=font_city)
+    draw.text((text_x, city_y), city_name, fill=CITY_TEXT_COLOR, font=font_city)
 
     # Draw temperature below city name
     temp_y = city_y + city_height + CITY_NAME_TEMP_SPACING
-    draw.text((text_x, temp_y), temp_text, fill=COLOR_WHITE, font=font_temp)
+    draw.text((text_x, temp_y), temp_text, fill=CITY_TEXT_COLOR, font=font_temp)
 
 
 def render_city_ttb(canvas: Image.Image, draw: ImageDraw.ImageDraw,
@@ -393,8 +422,8 @@ def render_city_ttb(canvas: Image.Image, draw: ImageDraw.ImageDraw,
     icon_y = y - (ICON_DISPLAY_SIZE // 2)
     canvas.paste(icon, (icon_x, icon_y), icon)
 
-    # Text starts 16px below icon center
-    text_start_y = y + (ICON_DISPLAY_SIZE // 2) + CITY_ICON_TEXT_SPACING
+    # Text starts immediately below icon (NO gap for TTB - flex-col without gap property)
+    text_start_y = y + (ICON_DISPLAY_SIZE // 2) + CITY_ICON_TEXT_SPACING_VERTICAL
 
     # Measure text dimensions for centering
     city_bbox = draw.textbbox((0, 0), city_name, font=font_city)
@@ -408,12 +437,12 @@ def render_city_ttb(canvas: Image.Image, draw: ImageDraw.ImageDraw,
     # Center city name horizontally with icon
     city_x = x - (city_width // 2)
     city_y = text_start_y
-    draw.text((city_x, city_y), city_name, fill=COLOR_WHITE, font=font_city)
+    draw.text((city_x, city_y), city_name, fill=CITY_TEXT_COLOR, font=font_city)
 
     # Center temperature horizontally with icon
     temp_x = x - (temp_width // 2)
     temp_y = city_y + city_height + CITY_NAME_TEMP_SPACING
-    draw.text((temp_x, temp_y), temp_text, fill=COLOR_WHITE, font=font_temp)
+    draw.text((temp_x, temp_y), temp_text, fill=CITY_TEXT_COLOR, font=font_temp)
 
 
 def render_city_ltr(canvas: Image.Image, draw: ImageDraw.ImageDraw,
@@ -459,22 +488,22 @@ def render_city_ltr(canvas: Image.Image, draw: ImageDraw.ImageDraw,
     # Center text block vertically with icon
     text_block_y = y - (total_text_height // 2)
 
-    # Text ends 16px to the left of icon center
+    # Text ends 16px to the left of icon center (gap-[16px] from Figma)
     # Calculate text_x based on the widest text element
     max_text_width = max(city_width, temp_width)
-    text_x = x - (ICON_DISPLAY_SIZE // 2) - CITY_ICON_TEXT_SPACING - max_text_width
+    text_x = x - (ICON_DISPLAY_SIZE // 2) - CITY_ICON_TEXT_SPACING_HORIZONTAL - max_text_width
 
     # Draw city name
     city_y = text_block_y
     # Right-align city name
     city_x = text_x + max_text_width - city_width
-    draw.text((city_x, city_y), city_name, fill=COLOR_WHITE, font=font_city)
+    draw.text((city_x, city_y), city_name, fill=CITY_TEXT_COLOR, font=font_city)
 
     # Draw temperature below city name
     temp_y = city_y + city_height + CITY_NAME_TEMP_SPACING
     # Right-align temperature
     temp_x = text_x + max_text_width - temp_width
-    draw.text((temp_x, temp_y), temp_text, fill=COLOR_WHITE, font=font_temp)
+    draw.text((temp_x, temp_y), temp_text, fill=CITY_TEXT_COLOR, font=font_temp)
 
 
 def render_header(canvas: Image.Image, hebrew_date: str, logger) -> None:
@@ -577,7 +606,7 @@ def render_header(canvas: Image.Image, hebrew_date: str, logger) -> None:
         logger.warning("Continuing with image generation despite header error")
 
 
-def render_cities(canvas: Image.Image, cities: List[Dict], logger) -> None:
+def render_cities(canvas: Image.Image, cities: List[Dict], logger, debug: bool = False) -> None:
     """
     Phase 4: Render all cities with icons and temperature data.
 
@@ -590,6 +619,7 @@ def render_cities(canvas: Image.Image, cities: List[Dict], logger) -> None:
         canvas: PIL Image (RGBA mode) to draw on
         cities: List of city dictionaries with name, min_temp, max_temp, weather_code
         logger: Logger instance
+        debug: If True, draw debug markers
     """
     try:
         logger.info(f"Rendering {len(cities)} cities...")
@@ -675,9 +705,11 @@ def render_cities(canvas: Image.Image, cities: List[Dict], logger) -> None:
                 continue
 
             position_data = CITY_POSITIONS[position_key]
-            # Apply Map Offset (Coordinates are relative to the map, not the canvas)
-            x = position_data['x'] + MAP_X
-            y = position_data['y'] + MAP_Y
+            # Apply Forecast Data Frame Offset + Container Padding Offset
+            # Figma coordinates are top-left of container (with 10px padding)
+            # We need icon center, so add padding (10px) + half icon (25px) = 35px
+            x = position_data['x'] + FORECAST_DATA_FRAME_X + CITY_COORDINATE_OFFSET
+            y = position_data['y'] + FORECAST_DATA_FRAME_Y + CITY_COORDINATE_OFFSET
             layout = position_data['layout']
 
             # Get weather icon
@@ -736,6 +768,15 @@ def render_cities(canvas: Image.Image, cities: List[Dict], logger) -> None:
             else:
                 logger.warning(f"Unknown layout type '{layout}' for city '{city_name_eng}'")
                 continue
+
+            # Debug: Draw green dot at anchor point (AFTER rendering to be visible on top)
+            if debug:
+                debug_r = 5
+                draw.ellipse(
+                    [x - debug_r, y - debug_r, x + debug_r, y + debug_r],
+                    fill=(0, 255, 0),
+                    outline=(0, 0, 0)
+                )
 
             rendered_count += 1
 
@@ -881,13 +922,14 @@ def wrap_hebrew_text(text: str, font: ImageFont.FreeTypeFont, max_width: int, dr
     return lines
 
 
-def render_logos(canvas: Image.Image, logger) -> None:
+def render_logos(canvas: Image.Image, logger, debug: bool = False) -> None:
     """
     Phase 6: Render IMS and Ministry of Transport logos.
 
     Args:
         canvas: PIL Image (RGBA mode) to draw on
         logger: Logger instance
+        debug: If True, draw debug markers
     """
     try:
         logger.info("Rendering logos...")
@@ -966,13 +1008,23 @@ def render_logos(canvas: Image.Image, logger) -> None:
         total_width = sum(logo[1].width for logo in logos_to_render)
         total_width += LOGO_SPACING * (len(logos_to_render) - 1)
 
-        # Center logos horizontally on canvas
-        current_x = (CANVAS_WIDTH - total_width) // 2
+        # Position logos starting from LOGOS_X (Figma coordinate)
+        current_x = LOGOS_X
         logo_y = LOGOS_Y
 
         # Render each logo
         for name, logo in logos_to_render:
             canvas.paste(logo, (current_x, logo_y), logo)
+            
+            # Debug: Draw blue outline
+            if debug:
+                draw = ImageDraw.Draw(canvas)
+                draw.rectangle(
+                    [current_x, logo_y, current_x + logo.width, logo_y + logo.height],
+                    outline=(0, 0, 255),
+                    width=2
+                )
+            
             logger.info(f"{name} logo positioned at ({current_x}, {logo_y})")
             current_x += logo.width + LOGO_SPACING
 
@@ -987,40 +1039,32 @@ def render_logos(canvas: Image.Image, logger) -> None:
 # MAIN GENERATION FUNCTION
 # ============================================================================
 
-def generate_forecast_map(forecast_data: Dict, output_path: Path, logger) -> bool:
+def generate_forecast_map(forecast_data: Dict, output_path: Path, logger, debug: bool = False) -> bool:
     """
     Generate complete forecast map image from forecast data.
-
-    Args:
-        forecast_data: Dictionary with 'cities', 'description', 'date', 'hebrew_date'
-        output_path: Path where to save the output image
-        logger: Logger instance
-
-    Returns:
-        True if successful, False otherwise
     """
     try:
         logger.info("=" * 60)
-        logger.info("Starting V2 Map-Based Image Generation")
+        logger.info("Starting V2 Map-Based Image Generation" + (" [DEBUG MODE]" if debug else ""))
         logger.info("=" * 60)
 
         # Phase 1: Initialize canvas with gradient
         canvas = initialize_canvas(logger)
 
         # Phase 2: Map overlay
-        render_map_overlay(canvas, logger)
+        render_map_overlay(canvas, logger, debug)
 
         # Phase 3: Header
         render_header(canvas, forecast_data['hebrew_date'], logger)
 
         # Phase 4: Cities
-        render_cities(canvas, forecast_data['cities'], logger)
+        render_cities(canvas, forecast_data['cities'], logger, debug)
 
         # Phase 5: Description
         render_description(canvas, forecast_data.get('description', ''), logger)
 
         # Phase 6: Logos
-        render_logos(canvas, logger)
+        render_logos(canvas, logger, debug)
 
         # Save the image
         logger.info(f"Saving image to: {output_path}")
@@ -1058,6 +1102,12 @@ def main():
         help='Output file path (default: output/forecast_map_{date}.png)'
     )
 
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Draw debug outlines for map, cities, and logos'
+    )
+
     args = parser.parse_args()
 
     # Setup logging
@@ -1088,7 +1138,7 @@ def main():
         output_path = OUTPUT_DIR / f'forecast_map_{date_str}.png'
 
     # Generate the image
-    success = generate_forecast_map(forecast_data, output_path, logger)
+    success = generate_forecast_map(forecast_data, output_path, logger, debug=args.debug)
 
     if success:
         logger.info(f"\n✓ Image generated: {output_path}")

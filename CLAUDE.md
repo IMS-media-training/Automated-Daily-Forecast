@@ -110,7 +110,17 @@ GRADIENT_STOPS = [
 - Color stops can be negative or >100% for extended gradients
 - Easy iteration on design without code changes
 
-### City Coordinates
+### City Coordinates (V2)
+CRITICAL: V2 coordinate system uses nested Figma frames requiring multiple offsets:
+
+1. **Forecast Data Frame Offset**: City coordinates in `city_coordinates.py` are relative to "Forecast Data" frame at (128, 248), NOT the main canvas or map
+2. **Container Padding Offset**: Figma coordinates are top-left of city container (with 10px padding). To get icon center, add 35px (10px padding + 25px half-icon-size)
+3. **Final Calculation**:
+   ```python
+   x_final = x_city + FORECAST_DATA_FRAME_X (128) + CITY_COORDINATE_OFFSET (35)
+   y_final = y_city + FORECAST_DATA_FRAME_Y (248) + CITY_COORDINATE_OFFSET (35)
+   ```
+
 Cities use manual x,y positions from Figma design (not calculated from lat/long).
 
 ### Hebrew Calendar
@@ -179,21 +189,23 @@ New constants for V2 assets:
 - [x] Create weather icon mapping
 - [x] Archive legacy V1 assets
 
-**Milestone 3 - Map-Based Image Generator** (In Progress)
+**Milestone 3 - Map-Based Image Generator** ✓ COMPLETE (with minor refinements pending)
 - [x] Implement generate_forecast_map.py with CSS-like gradient system
 - [x] Create CSS gradient background with angle and color stops (346deg, #DCFF57 → #22B2FF)
 - [x] Load and position Israel map overlay (533x1495px at 258,288)
 - [x] Render header with Hebrew date and separator line
-- [ ] Implement city rendering with RTL/TTB/LTR layouts
-- [ ] Render all 15 cities with weather icons and temperatures
-- [ ] Render weather description with text wrapping
-- [ ] Render IMS and MoT logos
+- [x] Implement city rendering with RTL/TTB/LTR layouts
+- [x] Render all 15 cities with weather icons and temperatures
+- [x] Render weather description with text wrapping (functional, pending weather data)
+- [x] Render IMS and MoT logos (MoT working, IMS placeholder pending SVG conversion)
 
 **Key Features Implemented:**
 - **CSS-like gradient system**: Designer-friendly API with angle (degrees) and color stops (position %)
-- **Figma-accurate positioning**: Map and gradient match Figma design specifications
-- **Phase 1, 2 & 3 complete**: Background gradient, map overlay, and header rendering functional
-- **Header rendering**: RTL Hebrew text with bidi, Noto Sans Hebrew Black font, centered white separator line (100px padding)
+- **Figma-accurate positioning**: Coordinate system with Forecast Data frame offset (128, 248) + container padding (35px)
+- **All 6 phases complete**: Background gradient, map overlay, header, cities, description, logos
+- **City rendering**: Three adaptive layouts (RTL with 16px gap, TTB with 0px gap, LTR with 16px gap)
+- **Text styling**: Black text color for cities (Noto Sans Hebrew Black 24px/SemiBold 20px), white for header
+- **Debug mode**: Optional visual markers for frame boundaries (--debug flag)
 
 ## Git Workflow
 
