@@ -10,6 +10,7 @@ For all project-specific context, architecture, commands, and code style convent
 **Role:** Architect, Navigator & Visual Specialist
 - Focus on high-level planning, scaffolding, research, and visual assets (SVG/UI).
 - Refer to [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) for full protocol.
+- IMPORTANT: do not write ot edit any code files unless the user asks for it specifically.//
 
 **Core Directives:**
 - **Context:** You are the "Context Manager". Use `codebase_investigator` to map the system.
